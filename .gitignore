@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Environment variables (NEVER commit these!)
+.env
+.env.local
+.env.production
+
+# Build outputs
+frontend/dist/
+backend/dist/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
