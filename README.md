@@ -41,6 +41,12 @@ DB_HOST=your_db_host
 DB_NAME=your_db_name
 DB_PASSWORD=your_db_password
 DB_PORT=5432
+DATABASE_URL=postgresql://user:password@host:5432/dbname
+DB_SSL=false
+
+# Production / hosted PostgreSQL
+# Set DB_SSL=true on Render/Supabase/managed Postgres if SSL is required.
+# Leave DB_SSL=false for most local PostgreSQL setups.
 
 # JWT
 JWT_SECRET=your_super_secure_jwt_secret
