@@ -6,10 +6,22 @@ const envFlag = (value, defaultValue = false) => {
   return ['1', 'true', 'yes', 'on', 'require'].includes(String(value).toLowerCase());
 };
 
+const getHostFromConnectionString = (connectionString) => {
+  try {
+    return new URL(connectionString).hostname;
+  } catch {
+    return '';
+  }
+};
+
 const hasConnectionString = Boolean(process.env.DATABASE_URL);
+const dbHost = hasConnectionString
+  ? getHostFromConnectionString(process.env.DATABASE_URL)
+  : (process.env.DB_HOST || '');
+const isLocalDatabase = ['localhost', '127.0.0.1', '::1'].includes(dbHost.toLowerCase());
 const useSSL = envFlag(
   process.env.DB_SSL,
-  hasConnectionString || process.env.NODE_ENV === 'production' || Boolean(process.env.RENDER)
+  hasConnectionString || (dbHost && !isLocalDatabase) || process.env.NODE_ENV === 'production' || Boolean(process.env.RENDER)
 );
 
 const poolConfig = hasConnectionString
@@ -30,14 +42,16 @@ if (useSSL) {
   };
 }
 
+console.log(`Database SSL ${useSSL ? 'enabled' : 'disabled'}${dbHost ? ` for host ${dbHost}` : ''}`);
+
 const pool = new Pool(poolConfig);
 
 // Test connection
 pool.connect((err, client, release) => {
   if (err) {
-    return console.error('❌ Database connection error', err.stack);
+    return console.error('Database connection error', err.stack);
   }
-  console.log('✅ Connected to PostgreSQL');
+  console.log('Connected to PostgreSQL');
   release();
 });
 
