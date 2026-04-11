@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../api/axios';
+import MobileMenu from '../../components/MobileMenu';
 
 const Withdrawals = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [withdrawals, setWithdrawals] = useState([]);
   const [loading, setLoading] = useState(true);
+  // ✅ FIX: status values corrected — DB stores 'approved' and 'rejected', not 'success'/'cancelled'
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
@@ -26,13 +28,13 @@ const Withdrawals = () => {
   };
 
   const approveWithdrawal = async (id) => {
-    if (!window.confirm('Approve this withdrawal? Make sure you send the money first!')) {
+    if (!window.confirm('Approve this withdrawal? Make sure you have sent the money to the agent first!')) {
       return;
     }
 
     try {
       await api.put(`/admin/withdrawals/${id}/approve`);
-      alert('Withdrawal approved! Remember to send money to the agent.');
+      alert('✅ Withdrawal approved. Debit recorded in agent wallet.');
       fetchWithdrawals();
     } catch (error) {
       alert('Error: ' + (error.response?.data?.error || 'Failed to approve'));
@@ -41,27 +43,30 @@ const Withdrawals = () => {
 
   const rejectWithdrawal = async (id) => {
     const reason = prompt('Enter reason for rejection:');
-    if (!reason) return;
+    if (reason === null) return; // cancelled prompt
 
     try {
       await api.put(`/admin/withdrawals/${id}/reject`, { reason });
-      alert('Withdrawal rejected');
+      alert('Withdrawal rejected. Agent has been notified.');
       fetchWithdrawals();
     } catch (error) {
       alert('Error: ' + (error.response?.data?.error || 'Failed to reject'));
     }
   };
 
-  const filteredWithdrawals = filter === 'all' 
-    ? withdrawals 
+  // ✅ FIX: filter keys now match actual DB status values
+  const STATUS_FILTERS = ['all', 'pending', 'approved', 'rejected'];
+
+  const filteredWithdrawals = filter === 'all'
+    ? withdrawals
     : withdrawals.filter(w => w.status === filter);
 
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'pending': return 'badge-warning';
-      case 'success': return 'badge-success';
-      case 'cancelled': return 'badge-danger';
-      default: return 'badge-muted';
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'pending':  return 'badge-warning';
+      case 'approved': return 'badge-success';
+      case 'rejected': return 'badge-danger';
+      default:         return 'badge-muted';
     }
   };
 
@@ -75,25 +80,55 @@ const Withdrawals = () => {
 
   return (
     <div className="dashboard-container">
-      <nav className="navbar">
-        <div>
-          <h1>💰 Withdrawal Requests</h1>
-          <p>Approve or reject agent withdrawals</p>
-        </div>
-        <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
-          <button onClick={toggleTheme} className="theme-toggle">
-            {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
-          </button>
-          <a href="/admin/dashboard" style={{color: 'var(--primary)', textDecoration: 'none'}}>
-            ← Back to Dashboard
-          </a>
-        </div>
-      </nav>
+      <MobileMenu currentPage="/admin/withdrawals" />
 
-      <main className="main-content">
+      <main className="main-content" style={{ paddingTop: '1rem' }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '1.5rem',
+          flexWrap: 'wrap',
+          gap: '1rem',
+        }}>
+          <div>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700' }}>💰 Withdrawal Requests</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+              Approve or reject agent withdrawal requests
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            <button onClick={toggleTheme} className="theme-toggle">
+              {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
+            </button>
+            <a href="/admin/dashboard" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: '600' }}>
+              ← Dashboard
+            </a>
+          </div>
+        </div>
+
+        {/* Summary badges */}
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+          {STATUS_FILTERS.filter(s => s !== 'all').map(status => {
+            const count = withdrawals.filter(w => w.status === status).length;
+            return (
+              <div key={status} style={{
+                padding: '0.75rem 1.25rem',
+                background: 'var(--card-bg)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '0.75rem',
+                fontSize: '0.875rem',
+              }}>
+                <span style={{ color: 'var(--text-secondary)', textTransform: 'capitalize' }}>{status}: </span>
+                <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{count}</span>
+              </div>
+            );
+          })}
+        </div>
+
         {/* Filter Buttons */}
-        <div style={{marginBottom: '1.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap'}}>
-          {['all', 'pending', 'success', 'cancelled'].map(status => (
+        <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {STATUS_FILTERS.map(status => (
             <button
               key={status}
               onClick={() => setFilter(status)}
@@ -106,9 +141,10 @@ const Withdrawals = () => {
                 color: filter === status ? 'white' : 'var(--text-primary)',
                 textTransform: 'capitalize',
                 fontWeight: '600',
+                fontSize: '0.875rem',
               }}
             >
-              {status} ({withdrawals.filter(w => w.status === status).length})
+              {status} ({status === 'all' ? withdrawals.length : withdrawals.filter(w => w.status === status).length})
             </button>
           ))}
         </div>
@@ -121,7 +157,8 @@ const Withdrawals = () => {
                 <tr>
                   <th>Agent</th>
                   <th>Amount</th>
-                  <th>Mobile Money</th>
+                  <th>Payment Details</th>
+                  <th>Reference</th>
                   <th>Status</th>
                   <th>Date</th>
                   <th>Actions</th>
@@ -130,57 +167,87 @@ const Withdrawals = () => {
               <tbody>
                 {filteredWithdrawals.length === 0 ? (
                   <tr>
-                    <td colSpan="6" style={{textAlign: 'center', padding: '2rem', color: 'var(--text-muted)'}}>
-                      No withdrawals found
+                    <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                      No {filter === 'all' ? '' : filter} withdrawals found
                     </td>
                   </tr>
                 ) : (
                   filteredWithdrawals.map(withdrawal => (
                     <tr key={withdrawal.id}>
                       <td>
-                        <div style={{fontWeight: '600'}}>{withdrawal.account_name}</div>
-                        <div style={{fontSize: '0.875rem', color: 'var(--text-secondary)'}}>
+                        <div style={{ fontWeight: '600' }}>{withdrawal.account_name}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                           {withdrawal.agent_email}
                         </div>
                       </td>
-                      <td style={{fontWeight: '600'}}>
-                        GH₵ {parseFloat(withdrawal.amount).toFixed(2)}
+                      <td>
+                        <span style={{ fontWeight: '700', fontSize: '1rem', color: 'var(--text-primary)' }}>
+                          GH₵ {parseFloat(withdrawal.amount).toFixed(2)}
+                        </span>
                       </td>
                       <td>
-                        <div>{withdrawal.account_number}</div>
-                        <div style={{fontSize: '0.875rem', color: 'var(--text-secondary)'}}>
+                        <div style={{ fontWeight: '500' }}>{withdrawal.account_number}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                           {withdrawal.bank_name}
                         </div>
                       </td>
                       <td>
-                        <span className={`badge ${getStatusColor(withdrawal.status)}`}>
+                        <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                          {withdrawal.reference}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`badge ${getStatusBadge(withdrawal.status)}`}>
                           {withdrawal.status}
                         </span>
                       </td>
-                      <td style={{color: 'var(--text-secondary)'}}>
+                      <td style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
                         {new Date(withdrawal.created_at).toLocaleDateString()}
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          {new Date(withdrawal.created_at).toLocaleTimeString()}
+                        </div>
                       </td>
                       <td>
                         {withdrawal.status === 'pending' && (
-                          <div style={{display: 'flex', gap: '0.5rem'}}>
+                          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                             <button
                               onClick={() => approveWithdrawal(withdrawal.id)}
-                              className="btn-success"
-                              style={{padding: '0.375rem 0.75rem', fontSize: '0.875rem'}}
+                              style={{
+                                padding: '0.375rem 0.875rem',
+                                background: 'rgba(16, 185, 129, 0.1)',
+                                border: '1px solid rgba(16, 185, 129, 0.4)',
+                                borderRadius: '0.375rem',
+                                color: 'var(--success)',
+                                cursor: 'pointer',
+                                fontSize: '0.8rem',
+                                fontWeight: '600',
+                              }}
                             >
-                              Approve
+                              ✅ Approve
                             </button>
                             <button
                               onClick={() => rejectWithdrawal(withdrawal.id)}
-                              className="btn-danger"
-                              style={{padding: '0.375rem 0.75rem', fontSize: '0.875rem'}}
+                              style={{
+                                padding: '0.375rem 0.875rem',
+                                background: 'rgba(239, 68, 68, 0.1)',
+                                border: '1px solid rgba(239, 68, 68, 0.4)',
+                                borderRadius: '0.375rem',
+                                color: 'var(--danger)',
+                                cursor: 'pointer',
+                                fontSize: '0.8rem',
+                                fontWeight: '600',
+                              }}
                             >
-                              Reject
+                              ❌ Reject
                             </button>
                           </div>
                         )}
                         {withdrawal.status !== 'pending' && (
-                          <span style={{color: 'var(--text-muted)'}}>—</span>
+                          <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                            {withdrawal.processed_at
+                              ? new Date(withdrawal.processed_at).toLocaleDateString()
+                              : '—'}
+                          </span>
                         )}
                       </td>
                     </tr>
