@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams }            from 'react-router-dom';
+import { useFeedback }          from '../../context/FeedbackContext';
 import api                      from '../../api/axios';
 
 const PAYSTACK_FEE = 0.0195;
 
 const Store = () => {
   const { slug } = useParams();
+  const { showError } = useFeedback();
   const [store,         setStore]         = useState(null);
   const [loading,       setLoading]       = useState(true);
   const [activeTab,     setActiveTab]     = useState('buy');
@@ -30,8 +32,8 @@ const Store = () => {
 
   const handleOrderClick = (e) => {
     e.preventDefault();
-    if (!selectedPkg)   { alert('Please select a package'); return; }
-    if (!customerPhone) { alert('Please enter your phone number'); return; }
+    if (!selectedPkg)   { showError('Please select a package.'); return; }
+    if (!customerPhone) { showError('Please enter your phone number.'); return; }
     setShowConfirm(true);
   };
 
@@ -41,7 +43,7 @@ const Store = () => {
       const r = await api.post(`/store/${slug}/order`, { phone:customerPhone, package_id:selectedPkg, customer_name:customerName });
       window.location.href = r.data.payment_url;
     } catch (err) {
-      alert('Error: ' + (err.response?.data?.error || 'Failed to create order'));
+      showError(err.response?.data?.error || 'Failed to create order.');
       setOrdering(false);
     }
     setShowConfirm(false);

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useFeedback } from '../../context/FeedbackContext';
 import api from '../../api/axios';
 import MobileMenu from '../../components/MobileMenu';
 
 const ManualWithdrawals = () => {
+  const { showConfirm, showPrompt, showSuccess, showError } = useFeedback();
   const [withdrawals, setWithdrawals] = useState([]);
   const [loading,     setLoading]     = useState(true);
   const [filter,      setFilter]      = useState('all');
@@ -17,16 +19,42 @@ const ManualWithdrawals = () => {
   };
 
   const approve = async (id) => {
-    if (!confirm('Confirm approval? Make sure you have sent the money before approving.')) return;
-    try { await api.put(`/admin/manual-withdrawals/${id}/approve`); fetchWithdrawals(); }
-    catch (e) { alert(e.response?.data?.error || 'Failed to approve'); }
+    const confirmed = await showConfirm({
+      title: 'Approve Manual Withdrawal',
+      message: 'Approve this request only after you have sent the money.',
+      confirmText: 'Approve',
+      cancelText: 'Cancel',
+    });
+    if (!confirmed) return;
+    try {
+      await api.put(`/admin/manual-withdrawals/${id}/approve`);
+      showSuccess('Manual withdrawal approved.');
+      fetchWithdrawals();
+    } catch (e) {
+      showError(e.response?.data?.error || 'Failed to approve manual withdrawal.');
+    }
   };
 
   const reject = async (id) => {
-    const reason = prompt('Reason for rejection:');
+    const reason = await showPrompt({
+      title: 'Reject Manual Withdrawal',
+      message: 'Enter the reason for rejecting this request.',
+      label: 'Rejection reason',
+      placeholder: 'Type the reason for rejection',
+      confirmText: 'Reject',
+      cancelText: 'Cancel',
+      tone: 'danger',
+      multiline: true,
+      validate: (value) => value.trim() ? '' : 'Enter a reason before continuing.',
+    });
     if (reason === null) return;
-    try { await api.put(`/admin/manual-withdrawals/${id}/reject`, { reason }); fetchWithdrawals(); }
-    catch (e) { alert(e.response?.data?.error || 'Failed to reject'); }
+    try {
+      await api.put(`/admin/manual-withdrawals/${id}/reject`, { reason: reason.trim() });
+      showSuccess('Manual withdrawal rejected.');
+      fetchWithdrawals();
+    } catch (e) {
+      showError(e.response?.data?.error || 'Failed to reject manual withdrawal.');
+    }
   };
 
   const STATUS = ['all', 'pending', 'approved', 'rejected'];

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useFeedback } from '../../context/FeedbackContext';
 import api from '../../api/axios';
 import MobileMenu from '../../components/MobileMenu';
 
 const SuspendedAgents = () => {
+  const { showConfirm, showSuccess, showError } = useFeedback();
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -22,24 +24,43 @@ const SuspendedAgents = () => {
   };
 
   const reactivateAgent = async (agent) => {
-    if (!window.confirm(`Reactivate ${agent.email}?`)) return;
+    const confirmed = await showConfirm({
+      title: 'Reactivate Agent',
+      message: `Reactivate ${agent.email}?`,
+      confirmText: 'Reactivate',
+      cancelText: 'Cancel',
+    });
+    if (!confirmed) return;
     try {
       await api.put(`/admin/suspended-agents/${agent.id}/reactivate`);
-      setMessage({ type: 'success', text: `${agent.email} has been reactivated.` });
+      showSuccess(`${agent.email} has been reactivated.`);
+      setMessage({ type: '', text: '' });
       fetchAgents();
     } catch (err) {
-      setMessage({ type: 'error', text: err.response?.data?.error || 'Failed to reactivate agent' });
+      const errorMessage = err.response?.data?.error || 'Failed to reactivate agent';
+      showError(errorMessage);
+      setMessage({ type: 'error', text: errorMessage });
     }
   };
 
   const deleteAgent = async (agent) => {
-    if (!window.confirm(`Permanently delete ${agent.email}? This cannot be undone.`)) return;
+    const confirmed = await showConfirm({
+      title: 'Delete Agent',
+      message: `Permanently delete ${agent.email}? This action cannot be undone.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
     try {
       await api.delete(`/admin/users/${agent.id}`, { data: { confirm_email: agent.email } });
-      setMessage({ type: 'success', text: `${agent.email} has been deleted.` });
+      showSuccess(`${agent.email} has been deleted.`);
+      setMessage({ type: '', text: '' });
       fetchAgents();
     } catch (err) {
-      setMessage({ type: 'error', text: err.response?.data?.error || 'Failed to delete agent' });
+      const errorMessage = err.response?.data?.error || 'Failed to delete agent';
+      showError(errorMessage);
+      setMessage({ type: 'error', text: errorMessage });
     }
   };
 

@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useFeedback } from '../../context/FeedbackContext';
 import api from '../../api/axios';
 import MobileMenu from '../../components/MobileMenu';
 
 const Withdrawals = () => {
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { showConfirm, showPrompt, showSuccess, showError } = useFeedback();
   const [withdrawals, setWithdrawals] = useState([]);
   const [loading, setLoading] = useState(true);
   // ✅ FIX: status values corrected — DB stores 'approved' and 'rejected', not 'success'/'cancelled'
@@ -28,29 +30,45 @@ const Withdrawals = () => {
   };
 
   const approveWithdrawal = async (id) => {
-    if (!window.confirm('Approve this withdrawal? Make sure you have sent the money to the agent first!')) {
+    const confirmed = await showConfirm({
+      title: 'Approve Withdrawal',
+      message: 'Approve this withdrawal only after you have sent the money to the agent.',
+      confirmText: 'Approve',
+      cancelText: 'Cancel',
+    });
+    if (!confirmed) {
       return;
     }
 
     try {
       await api.put(`/admin/withdrawals/${id}/approve`);
-      alert('✅ Withdrawal approved. Debit recorded in agent wallet.');
+      showSuccess('Withdrawal approved. Debit recorded in agent wallet.');
       fetchWithdrawals();
     } catch (error) {
-      alert('Error: ' + (error.response?.data?.error || 'Failed to approve'));
+      showError(error.response?.data?.error || 'Failed to approve withdrawal.');
     }
   };
 
   const rejectWithdrawal = async (id) => {
-    const reason = prompt('Enter reason for rejection:');
-    if (reason === null) return; // cancelled prompt
+    const reason = await showPrompt({
+      title: 'Reject Withdrawal',
+      message: 'Enter the reason for rejecting this withdrawal.',
+      label: 'Rejection reason',
+      placeholder: 'Type the reason for rejection',
+      confirmText: 'Reject',
+      cancelText: 'Cancel',
+      tone: 'danger',
+      multiline: true,
+      validate: (value) => value.trim() ? '' : 'Enter a reason before continuing.',
+    });
+    if (reason === null) return;
 
     try {
-      await api.put(`/admin/withdrawals/${id}/reject`, { reason });
-      alert('Withdrawal rejected. Agent has been notified.');
+      await api.put(`/admin/withdrawals/${id}/reject`, { reason: reason.trim() });
+      showSuccess('Withdrawal rejected. Agent has been notified.');
       fetchWithdrawals();
     } catch (error) {
-      alert('Error: ' + (error.response?.data?.error || 'Failed to reject'));
+      showError(error.response?.data?.error || 'Failed to reject withdrawal.');
     }
   };
 

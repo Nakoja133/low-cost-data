@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useFeedback } from '../../context/FeedbackContext';
 import api from '../../api/axios';
 import MobileMenu from '../../components/MobileMenu';
 
@@ -6,6 +7,7 @@ const RANGE_LABELS = { daily:'Daily', weekly:'Weekly', monthly:'Monthly', yearly
 const NET_COLORS   = { MTN:'#fbbf24', Telecel:'#ef4444', AirtelTigo:'#3b82f6' };
 
 const Users = () => {
+  const { showPrompt, showSuccess, showError } = useFeedback();
   const [users,     setUsers]     = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [showForm,  setShowForm]  = useState(false);
@@ -44,11 +46,24 @@ const Users = () => {
   };
 
   const handleDelete = async (userId, userEmail) => {
-    const confirmText = prompt(`Type the email to confirm deletion:\n${userEmail}`);
-    if (!confirmText || confirmText !== userEmail) { alert('Confirmation failed.'); return; }
-    if (!confirm(`⚠️ Delete ${userEmail}? This cannot be undone.`)) return;
-    try { await api.delete(`/admin/users/${userId}`, { data:{ confirm_email:userEmail } }); fetchUsers(); }
-    catch (err) { alert(err.response?.data?.error || 'Failed to delete'); }
+    const confirmText = await showPrompt({
+      title: 'Delete User',
+      message: `Type ${userEmail} to confirm deletion. This action cannot be undone.`,
+      label: 'Confirmation email',
+      placeholder: userEmail,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      tone: 'danger',
+      validate: (value) => value.trim() === userEmail ? '' : 'Enter the exact email to continue.',
+    });
+    if (confirmText === null) return;
+    try {
+      await api.delete(`/admin/users/${userId}`, { data:{ confirm_email:userEmail } });
+      showSuccess(`${userEmail} deleted successfully.`);
+      fetchUsers();
+    } catch (err) {
+      showError(err.response?.data?.error || 'Failed to delete user.');
+    }
   };
 
   // Open agent stats modal

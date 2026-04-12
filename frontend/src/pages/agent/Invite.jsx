@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useFeedback } from '../../context/FeedbackContext';
 import api from '../../api/axios';
 import MobileMenu from '../../components/MobileMenu';
 
 const AgentInvite = () => {
+  const { showSuccess } = useFeedback();
   const [formData, setFormData] = useState({ email: '', password: '', phone: '', store_name: '' });
   const [loading,  setLoading]  = useState(false);
   const [result,   setResult]   = useState(null);
@@ -25,7 +27,7 @@ const AgentInvite = () => {
 
   const copy = (text, label = 'Copied!') => {
     navigator.clipboard.writeText(text);
-    alert(`✅ ${label}`);
+    showSuccess(label);
   };
 
   // Shared input style

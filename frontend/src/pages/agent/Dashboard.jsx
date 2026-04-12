@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate }          from 'react-router-dom';
 import { useAuth }              from '../../context/AuthContext';
+import { useFeedback }          from '../../context/FeedbackContext';
 import api                      from '../../api/axios';
 import MobileMenu               from '../../components/MobileMenu';
 
@@ -8,6 +9,7 @@ const RANGE_LABELS = { daily:'Daily', weekly:'Weekly', monthly:'Monthly', yearly
 
 const AgentDashboard = () => {
   const { user, logout, updateUser } = useAuth();
+  const { showError }                = useFeedback();
   const navigate                     = useNavigate();
 
   const [showTerms,    setShowTerms]    = useState(false);
@@ -73,7 +75,7 @@ const AgentDashboard = () => {
       updateUser({ terms_accepted:true });
       setShowTerms(false);
       loadAll();
-    } catch { alert('Failed. Try again.'); }
+    } catch { showError('Failed. Try again.'); }
     finally { setAccepting(false); }
   };
 
