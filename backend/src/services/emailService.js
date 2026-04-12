@@ -1,62 +1,34 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-const emailHost = process.env.EMAIL_HOST;
-const emailPort = parseInt(process.env.EMAIL_PORT, 10) || 587;
-const emailUser = process.env.EMAIL_USER;
-const emailPass = process.env.EMAIL_PASS;
-const emailConfigured = Boolean(emailHost && emailUser && emailPass);
-
-// Create transporter only when SMTP credentials are available
-const transporter = emailConfigured
-  ? nodemailer.createTransport({
-      host: emailHost,
-      port: emailPort,
-      secure: emailPort === 465,
-      auth: {
-        user: emailUser,
-        pass: emailPass,
-      },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 15000,
-    })
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
-// Verify connection on startup
-if (transporter) {
-  transporter.verify((error) => {
-    if (error) {
-      console.error('Email service connection failed:', error.message);
-      console.log('Check your .env email settings');
-    } else {
-      console.log('Email service ready - can send emails');
-    }
-  });
-} else {
-  console.log('Email service not configured. Skipping SMTP verification.');
-}
-
-// Send email function
 const sendEmail = async ({ to, subject, text, html }) => {
-  if (!transporter) {
-    console.error('Email send failed: email service is not configured');
-    return { success: false, error: 'Email service is not configured' };
+  if (!resend) {
+    console.log('⚠️ Email not configured — skipping:', subject);
+    return { success: false, error: 'Email not configured' };
   }
 
   try {
-    const info = await transporter.sendMail({
-      from: `"Low-Cost Data Bundles" <${process.env.EMAIL_FROM}>`,
+    const { data, error } = await resend.emails.send({
+      from:    process.env.EMAIL_FROM || 'onboarding@resend.dev',
       to,
       subject,
       text,
-      html,
+      html: html || text,
     });
 
-    console.log('Email sent successfully:', info.messageId);
-    return { success: true, messageId: info.messageId };
-  } catch (error) {
-    console.error('Email send failed:', error.message);
-    return { success: false, error: error.message };
+    if (error) {
+      console.error('❌ Email error:', error);
+      return { success: false, error };
+    }
+
+    console.log('✅ Email sent:', subject);
+    return { success: true, data };
+  } catch (err) {
+    console.error('❌ Email failed:', err.message);
+    return { success: false, error: err.message };
   }
 };
 
