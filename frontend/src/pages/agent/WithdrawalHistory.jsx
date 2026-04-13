@@ -9,10 +9,10 @@ const STATUS_COLORS = {
 };
 
 const WithdrawalHistory = () => {
-  const [history,  setHistory]  = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [filter,   setFilter]   = useState('all'); // all | pending | approved | rejected
-  const [typeFilter, setType]   = useState('all'); // all | automatic | manual
+  const [history,    setHistory]    = useState([]);
+  const [loading,    setLoading]    = useState(true);
+  const [filter,     setFilter]     = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
 
   useEffect(() => { fetchHistory(); }, []);
 
@@ -20,13 +20,16 @@ const WithdrawalHistory = () => {
     try {
       const r = await api.get('/agent/withdrawal-history');
       setHistory(r.data.data || []);
-    } catch (err) { console.error(err); }
-    finally { setLoading(false); }
+    } catch (err) { 
+      console.error(err); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   const filtered = history.filter(w => {
-    if (filter !== 'all' && w.status !== filter)         return false;
-    if (typeFilter !== 'all' && w.type !== typeFilter)   return false;
+    if (filter !== 'all' && w.status !== filter) return false;
+    if (typeFilter !== 'all' && w.type !== typeFilter) return false;
     return true;
   });
 
@@ -36,29 +39,48 @@ const WithdrawalHistory = () => {
     return acc;
   }, { totalReceived: 0, totalPending: 0 });
 
-  if (loading) return <div className="dashboard-container"><div className="loading">Loading...</div></div>;
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)' }}>
+        <div className="loading-spinner" />
+      </div>
+    );
+  }
 
   return (
-    <div className="dashboard-container">
+    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
       <MobileMenu currentPage="/agent/withdrawal-history" />
 
-      <main className="main-content" style={{ paddingTop: '1rem' }}>
+      <main className="main-content" style={{ padding: '1.5rem', maxWidth: '1200px', margin: '0 auto' }}>
 
         {/* Header */}
-        <div style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', borderRadius: '1rem', padding: '1.5rem', marginBottom: '1.5rem', color: 'white' }}>
-          <h2 style={{ fontSize: '1.35rem', fontWeight: '800', marginBottom: '0.2rem' }}>💳 Withdrawal History</h2>
-          <p style={{ opacity: 0.88, fontSize: '0.875rem' }}>All your withdrawal requests</p>
+        <div style={{
+          background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+          borderRadius: '1rem',
+          padding: '1.5rem',
+          marginBottom: '1.5rem',
+          color: 'white',
+          boxShadow: '0 8px 25px rgba(99,102,241,0.28)'
+        }}>
+          <h2 style={{ fontSize: '1.35rem', fontWeight: '800', marginBottom: '0.2rem', margin: 0 }}>💳 Withdrawal History</h2>
+          <p style={{ opacity: 0.88, fontSize: '0.875rem', margin: 0 }}>All your withdrawal requests</p>
         </div>
 
-        {/* Summary cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+        {/* Summary Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
           {[
-            { label: 'Total Requests',  value: history.length,                          color: '#8b5cf6', unit: '' },
-            { label: 'Total Received',  value: totals.totalReceived.toFixed(2),          color: '#10b981', unit: 'GH₵ ' },
-            { label: 'Pending',         value: totals.totalPending.toFixed(2),           color: '#f59e0b', unit: 'GH₵ ' },
-            { label: 'Approved',        value: history.filter(w=>w.status==='approved').length, color: '#10b981', unit: '' },
+            { label: 'Total Requests', value: history.length, color: '#8b5cf6', unit: '' },
+            { label: 'Total Received', value: totals.totalReceived.toFixed(2), color: '#10b981', unit: 'GH₵ ' },
+            { label: 'Pending',        value: totals.totalPending.toFixed(2),  color: '#f59e0b', unit: 'GH₵ ' },
+            { label: 'Approved',       value: history.filter(w => w.status === 'approved').length, color: '#10b981', unit: '' },
           ].map(s => (
-            <div key={s.label} style={{ background: 'var(--card-bg)', padding: '1.125rem', borderRadius: '0.875rem', border: '1px solid var(--border-color)', borderTop: `3px solid ${s.color}` }}>
+            <div key={s.label} style={{
+              background: 'var(--card-bg)',
+              padding: '1.125rem',
+              borderRadius: '0.875rem',
+              border: '1px solid var(--border-color)',
+              borderTop: `3px solid ${s.color}`
+            }}>
               <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>{s.label}</div>
               <div style={{ fontSize: '1.2rem', fontWeight: '800', color: s.color }}>{s.unit}{s.value}</div>
             </div>
@@ -66,71 +88,109 @@ const WithdrawalHistory = () => {
         </div>
 
         {/* Filters */}
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
-          {['all','pending','approved','rejected'].map(f => (
-            <button key={f} onClick={() => setFilter(f)} style={{ padding: '0.45rem 1rem', border: 'none', borderRadius: '9999px', cursor: 'pointer', fontWeight: '600', fontSize: '0.8rem', textTransform: 'capitalize', background: filter === f ? 'var(--primary)' : 'var(--bg-tertiary)', color: filter === f ? 'white' : 'var(--text-primary)' }}>
-              {f} ({f === 'all' ? history.length : history.filter(w=>w.status===f).length})
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+          {['all', 'pending', 'approved', 'rejected'].map(f => (
+            <button key={f} onClick={() => setFilter(f)} style={{
+              padding: '0.45rem 1rem',
+              border: 'none',
+              borderRadius: '9999px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '0.8rem',
+              textTransform: 'capitalize',
+              background: filter === f ? 'var(--primary)' : 'var(--bg-tertiary)',
+              color: filter === f ? 'white' : 'var(--text-primary)',
+              transition: 'all 0.2s'
+            }}>
+              {f} ({f === 'all' ? history.length : history.filter(w => w.status === f).length})
             </button>
           ))}
-          <span style={{ alignSelf: 'center', color: 'var(--text-muted)', fontSize: '0.75rem' }}>|</span>
-          {['all','automatic','manual'].map(t => (
-            <button key={t} onClick={() => setType(t)} style={{ padding: '0.45rem 1rem', border: 'none', borderRadius: '9999px', cursor: 'pointer', fontWeight: '600', fontSize: '0.8rem', textTransform: 'capitalize', background: typeFilter === t ? '#f59e0b' : 'var(--bg-tertiary)', color: typeFilter === t ? 'white' : 'var(--text-primary)' }}>
+          <span style={{ alignSelf: 'center', color: 'var(--text-muted)', fontSize: '0.75rem', margin: '0 0.25rem' }}>|</span>
+          {['all', 'automatic', 'manual'].map(t => (
+            <button key={t} onClick={() => setTypeFilter(t)} style={{
+              padding: '0.45rem 1rem',
+              border: 'none',
+              borderRadius: '9999px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '0.8rem',
+              textTransform: 'capitalize',
+              background: typeFilter === t ? '#f59e0b' : 'var(--bg-tertiary)',
+              color: typeFilter === t ? 'white' : 'var(--text-primary)',
+              transition: 'all 0.2s'
+            }}>
               {t}
             </button>
           ))}
         </div>
 
         {/* Table */}
-        <div className="card">
-          <div className="table-container">
-            <table>
+        <div className="card" style={{ background: 'var(--card-bg)', borderRadius: '1rem', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+          <div style={{ overflowX: 'auto', width: '100%' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
               <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>MoMo Details</th>
-                  <th>Amount Received</th>
-                  <th>Type</th>
-                  <th>Status</th>
-                  <th>Date</th>
+                <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+                  <th style={{ textAlign: 'left', padding: '1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>ID</th>
+                  <th style={{ textAlign: 'left', padding: '1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>MoMo Details</th>
+                  <th style={{ textAlign: 'left', padding: '1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Amount Received</th>
+                  <th style={{ textAlign: 'left', padding: '1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Type</th>
+                  <th style={{ textAlign: 'left', padding: '1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
+                  <th style={{ textAlign: 'left', padding: '1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Date</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan="6" style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>No withdrawals found</td></tr>
+                  <tr>
+                    <td colSpan="6" style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>No withdrawals found</td>
+                  </tr>
                 ) : filtered.map((w, i) => {
                   const sc = STATUS_COLORS[w.status] || STATUS_COLORS.pending;
-                  // Generate a display ID: first 8 chars of UUID, prefixed by type
-                  const displayId = `${w.type === 'automatic' ? 'AW' : 'MW'}-${w.id?.toString().replace(/-/g,'').slice(0,8).toUpperCase()}`;
+                  const displayId = `${w.type === 'automatic' ? 'AW' : 'MW'}-${w.id?.toString().replace(/-/g, '').slice(0, 8).toUpperCase()}`;
                   return (
-                    <tr key={`${w.id}-${w.type}`}>
-                      <td>
+                    <tr key={`${w.id}-${w.type}`} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.15s' }}>
+                      <td style={{ padding: '1rem' }}>
                         <span style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{displayId}</span>
                       </td>
-                      <td>
-                        <div style={{ fontWeight: '600', fontSize: '0.875rem' }}>{w.momo_number}</div>
+                      <td style={{ padding: '1rem' }}>
+                        <div style={{ fontWeight: '600', fontSize: '0.875rem', color: 'var(--text-primary)' }}>{w.momo_number}</div>
                         <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{w.account_name}</div>
                       </td>
-                      <td>
-                        <div style={{ fontWeight: '700' }}>GH₵ {parseFloat(w.net_amount || w.amount).toFixed(2)}</div>
+                      <td style={{ padding: '1rem' }}>
+                        <div style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text-primary)' }}>GH₵ {parseFloat(w.net_amount || w.amount).toFixed(2)}</div>
                         {parseFloat(w.charge_amount || 0) > 0 && (
-                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
                             Requested: GH₵ {parseFloat(w.amount).toFixed(2)} (–GH₵ {parseFloat(w.charge_amount).toFixed(2)} charge)
                           </div>
                         )}
                       </td>
-                      <td>
-                        <span style={{ padding: '0.2rem 0.625rem', borderRadius: '9999px', fontSize: '0.72rem', fontWeight: '700', background: w.type === 'automatic' ? 'rgba(16,185,129,0.12)' : 'rgba(99,102,241,0.12)', color: w.type === 'automatic' ? 'var(--success)' : 'var(--primary)' }}>
+                      <td style={{ padding: '1rem' }}>
+                        <span style={{
+                          padding: '0.2rem 0.625rem',
+                          borderRadius: '9999px',
+                          fontSize: '0.72rem',
+                          fontWeight: '700',
+                          background: w.type === 'automatic' ? 'rgba(16,185,129,0.12)' : 'rgba(99,102,241,0.12)',
+                          color: w.type === 'automatic' ? 'var(--success)' : 'var(--primary)'
+                        }}>
                           {w.type === 'automatic' ? '⚡ Auto' : '📋 Manual'}
                         </span>
                       </td>
-                      <td>
-                        <span style={{ padding: '0.2rem 0.625rem', borderRadius: '9999px', fontSize: '0.72rem', fontWeight: '700', background: sc.bg, color: sc.color, textTransform: 'capitalize' }}>
+                      <td style={{ padding: '1rem' }}>
+                        <span style={{
+                          padding: '0.2rem 0.625rem',
+                          borderRadius: '9999px',
+                          fontSize: '0.72rem',
+                          fontWeight: '700',
+                          background: sc.bg,
+                          color: sc.color,
+                          textTransform: 'capitalize'
+                        }}>
                           {w.status}
                         </span>
                       </td>
-                      <td style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                      <td style={{ padding: '1rem', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
                         <div>{new Date(w.created_at).toLocaleDateString()}</div>
-                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{new Date(w.created_at).toLocaleTimeString()}</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>{new Date(w.created_at).toLocaleTimeString()}</div>
                       </td>
                     </tr>
                   );
@@ -140,6 +200,13 @@ const WithdrawalHistory = () => {
           </div>
         </div>
       </main>
+
+      <style>{`
+        .main-content { padding-top: 1rem; }
+        @media (max-width: 767px) { .main-content { padding-top: 0.75rem; padding-bottom: 1.5rem; } }
+        .loading-spinner { width: 32px; height: 32px; border: 3px solid var(--border-color); border-top-color: #6366f1; border-radius: 50%; animation: spin 0.7s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 };

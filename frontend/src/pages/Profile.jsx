@@ -6,25 +6,45 @@ import MobileMenu from '../components/MobileMenu';
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
-  const navigate             = useNavigate();
-  const isAdmin              = user?.role === 'admin';
+  const navigate = useNavigate();
+  const isAdmin = user?.role === 'admin';
 
-  const [loading,  setLoading]  = useState(false);
-  const [message,  setMessage]  = useState({ type: '', text: '', section: '' });
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '', section: '' });
 
-  // ── Profile fields ────────────────────────────────────────────
-  const [profileData, setProfileData] = useState({ username: '', phone: '', whatsapp_number: '' });
-  const [passwordData, setPasswordData] = useState({ current_password: '', new_password: '', confirm_password: '' });
-  const [emailData,    setEmailData]    = useState({ new_email: '', current_password: '', verification_code: '' });
-  const [emailStep,    setEmailStep]    = useState(1);
+  // Profile fields
+  const [profileData, setProfileData] = useState({
+    username: '',
+    phone: '',
+    whatsapp_number: '',
+  });
 
-  // ── Agent: store name ─────────────────────────────────────────
-  const [storeName,  setStoreName]  = useState('');
+  // Password fields
+  const [passwordData, setPasswordData] = useState({
+    current_password: '',
+    new_password: '',
+    confirm_password: '',
+  });
+
+  // Email change fields
+  const [emailData, setEmailData] = useState({
+    new_email: '',
+    current_password: '',
+    verification_code: '',
+  });
+  const [emailStep, setEmailStep] = useState(1);
+
+  // Agent: store name
+  const [storeName, setStoreName] = useState('');
   const [savingName, setSavingName] = useState(false);
 
   useEffect(() => {
     if (user) {
-      setProfileData({ username: user.username || '', phone: user.phone || '', whatsapp_number: user.whatsapp_number || '' });
+      setProfileData({
+        username: user.username || '',
+        phone: user.phone || '',
+        whatsapp_number: user.whatsapp_number || '',
+      });
       setStoreName(user.store_name || '');
     }
   }, [user]);
@@ -34,76 +54,90 @@ const Profile = () => {
     setTimeout(() => setMessage({ type: '', text: '', section: '' }), 5000);
   };
 
-  // ── Update profile ────────────────────────────────────────────
+  // ── Update Profile ────────────────────────────────────────────
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       const r = await api.put('/auth/profile', {
-        username:        profileData.username        || null,
-        phone:           profileData.phone           || null,
+        username: profileData.username || null,
+        phone: profileData.phone || null,
         whatsapp_number: profileData.whatsapp_number || null,
       });
       if (r.data.user) updateUser(r.data.user);
       showMsg('success', 'Profile updated successfully!', 'profile');
     } catch (err) {
       showMsg('error', err.response?.data?.error || 'Failed to update profile', 'profile');
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // ── Change password ───────────────────────────────────────────
+  // ── Change Password ───────────────────────────────────────────
   const handleChangePassword = async (e) => {
     e.preventDefault();
     if (passwordData.new_password !== passwordData.confirm_password) {
-      showMsg('error', 'New passwords do not match', 'password'); return;
+      showMsg('error', 'New passwords do not match', 'password');
+      return;
     }
     setLoading(true);
     try {
       await api.put('/auth/change-password', {
         current_password: passwordData.current_password,
-        new_password:     passwordData.new_password,
+        new_password: passwordData.new_password,
       });
       showMsg('success', 'Password changed successfully!', 'password');
       setPasswordData({ current_password: '', new_password: '', confirm_password: '' });
     } catch (err) {
       showMsg('error', err.response?.data?.error || 'Failed to change password', 'password');
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // ── Request email change ──────────────────────────────────────
+  // ── Request Email Change ──────────────────────────────────────
   const handleRequestEmailChange = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       const r = await api.post('/auth/request-email-change', {
-        new_email:        emailData.new_email,
+        new_email: emailData.new_email,
         current_password: emailData.current_password,
       });
       showMsg('success', r.data.message || 'Verification code sent!', 'email');
       setEmailStep(2);
     } catch (err) {
       showMsg('error', err.response?.data?.error || 'Failed to request email change', 'email');
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // ── Confirm email change ──────────────────────────────────────
+  // ── Confirm Email Change ──────────────────────────────────────
   const handleConfirmEmailChange = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const r = await api.post('/auth/confirm-email-change', { code: emailData.verification_code });
+      const r = await api.post('/auth/confirm-email-change', {
+        code: emailData.verification_code,
+      });
       updateUser({ email: r.data.new_email });
       showMsg('success', `Email changed: ${r.data.old_email} → ${r.data.new_email}`, 'email');
       setEmailData({ new_email: '', current_password: '', verification_code: '' });
       setEmailStep(1);
     } catch (err) {
       showMsg('error', err.response?.data?.error || 'Invalid or expired code', 'email');
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // ── Agent: update store name ──────────────────────────────────
+  // ── Agent: Update Store Name ──────────────────────────────────
   const handleSaveStoreName = async () => {
-    if (!storeName.trim()) { showMsg('error', 'Store name cannot be empty', 'store'); return; }
+    if (!storeName.trim()) {
+      showMsg('error', 'Store name cannot be empty', 'store');
+      return;
+    }
     setSavingName(true);
     try {
       await api.put('/agent/store-name', { store_name: storeName.trim() });
@@ -111,24 +145,35 @@ const Profile = () => {
       showMsg('success', 'Store name updated!', 'store');
     } catch (err) {
       showMsg('error', err.response?.data?.error || 'Failed to update store name', 'store');
-    } finally { setSavingName(false); }
+    } finally {
+      setSavingName(false);
+    }
   };
 
-  // ── Admin: save platform settings ────────────────────────────
-  // Removed - now only in mobile menu
-
-  // ── Shared helpers ────────────────────────────────────────────
-  const label  = (text, req) => (
+  // ── Shared Helpers ────────────────────────────────────────────
+  const label = (text, req) => (
     <label style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '600', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
       {text} {req && <span style={{ color: 'var(--danger)' }}>*</span>}
     </label>
   );
 
-  const Msg = ({ section }) => message.section === section && message.text ? (
-    <div style={{ padding: '0.875rem 1rem', borderRadius: '0.5rem', marginBottom: '1rem', background: message.type === 'success' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${message.type === 'success' ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`, color: message.type === 'success' ? 'var(--success)' : 'var(--danger)', fontWeight: '600', fontSize: '0.875rem' }}>
-      {message.text}
-    </div>
-  ) : null;
+  const Msg = ({ section }) =>
+    message.section === section && message.text ? (
+      <div
+        style={{
+          padding: '0.875rem 1rem',
+          borderRadius: '0.5rem',
+          marginBottom: '1rem',
+          background: message.type === 'success' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+          border: `1px solid ${message.type === 'success' ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+          color: message.type === 'success' ? 'var(--success)' : 'var(--danger)',
+          fontWeight: '600',
+          fontSize: '0.875rem',
+        }}
+      >
+        {message.text}
+      </div>
+    ) : null;
 
   const Section = ({ title, children, extra }) => (
     <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '2rem', marginTop: '2rem' }}>
@@ -140,13 +185,40 @@ const Profile = () => {
     </div>
   );
 
+  const inputStyle = {
+    width: '100%',
+    padding: '0.875rem 1rem',
+    border: '1px solid var(--border-color)',
+    borderRadius: '0.5rem',
+    background: 'var(--bg-secondary)',
+    color: 'var(--text-primary)',
+    fontSize: '0.95rem',
+    outline: 'none',
+    transition: 'border-color 0.2s, box-shadow 0.2s',
+    boxSizing: 'border-box',
+  };
+
+  const buttonStyle = {
+    padding: '0.875rem 1.5rem',
+    borderRadius: '0.5rem',
+    border: 'none',
+    fontWeight: '700',
+    fontSize: '0.9rem',
+    cursor: 'pointer',
+    transition: 'opacity 0.2s, transform 0.1s',
+    width: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  };
+
   return (
-    <div className="dashboard-container">
+    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
       <MobileMenu currentPage="/profile" />
 
-      <main className="main-content" style={{ paddingTop: '1rem', maxWidth: '640px' }}>
+      <main className="main-content" style={{ padding: '1.5rem', maxWidth: '680px', margin: '0 auto' }}>
 
-        {/* ── Page header ─────────────────────────────────── */}
+        {/* Header */}
         <div style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', borderRadius: '1rem', padding: '1.5rem', marginBottom: '1.5rem', color: 'white' }}>
           <div style={{ fontSize: '2rem', marginBottom: '0.25rem' }}>{isAdmin ? '🎛️' : '👤'}</div>
           <h2 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '0.2rem' }}>
@@ -155,43 +227,87 @@ const Profile = () => {
           <p style={{ opacity: 0.88, fontSize: '0.875rem' }}>Manage your account and preferences</p>
         </div>
 
-        <div className="card">
+        {/* Main Card */}
+        <div className="card" style={{ background: 'var(--card-bg)', borderRadius: '1rem', padding: '1.5rem', border: '1px solid var(--border-color)' }}>
 
-          {/* ── Account Information ─────────────────────── */}
+          {/* Account Information */}
           <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.25rem' }}>📝 Account Information</h3>
           <Msg section="profile" />
           <form onSubmit={handleUpdateProfile} autoComplete="off" style={{ display: 'flex', flexDirection: 'column', gap: '1.125rem' }}>
             <div>
               {label('Email')}
-              <input type="email" value={user?.email || ''} disabled className="input" style={{ background: 'var(--bg-tertiary)', cursor: 'not-allowed', color: 'var(--text-muted)' }} />
+              <input
+                type="email"
+                value={user?.email || ''}
+                disabled
+                style={{ ...inputStyle, background: 'var(--bg-tertiary)', cursor: 'not-allowed', color: 'var(--text-muted)' }}
+              />
               <p style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Use "Change Email" below to update your email</p>
             </div>
             <div>
               {label('Username')}
-              <input type="text" value={profileData.username} onChange={e => setProfileData({ ...profileData, username: e.target.value })} className="input" placeholder="Your display name" autoComplete="off" />
+              <input
+                type="text"
+                value={profileData.username}
+                onChange={(e) => setProfileData({ ...profileData, username: e.target.value })}
+                style={inputStyle}
+                placeholder="Your display name"
+                autoComplete="off"
+              />
             </div>
             <div>
               {label('Phone Number')}
-              <input type="tel" value={profileData.phone} onChange={e => setProfileData({ ...profileData, phone: e.target.value })} className="input" placeholder="0240000000" autoComplete="off" />
+              <input
+                type="tel"
+                value={profileData.phone}
+                onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                style={inputStyle}
+                placeholder="0240000000"
+                autoComplete="off"
+              />
             </div>
             <div>
               {label('WhatsApp Number')}
-              <input type="tel" value={profileData.whatsapp_number} onChange={e => setProfileData({ ...profileData, whatsapp_number: e.target.value })} className="input" placeholder="233240000000" autoComplete="off" />
+              <input
+                type="tel"
+                value={profileData.whatsapp_number}
+                onChange={(e) => setProfileData({ ...profileData, whatsapp_number: e.target.value })}
+                style={inputStyle}
+                placeholder="233240000000"
+                autoComplete="off"
+              />
               <p style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Include country code — e.g. 233 for Ghana</p>
             </div>
-            <button type="submit" disabled={loading} className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '0.875rem' }}>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                ...buttonStyle,
+                background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+                color: 'white',
+                opacity: loading ? 0.7 : 1,
+                cursor: loading ? 'not-allowed' : 'pointer',
+              }}
+            >
               {loading ? 'Updating...' : '💾 Save Profile'}
             </button>
           </form>
 
-          {/* ── Agent: Store Settings ───────────────────── */}
+          {/* Agent: Store Settings */}
           {!isAdmin && (
             <Section title="🏪 Store Settings">
               <Msg section="store" />
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div>
                   {label('Store Name')}
-                  <input type="text" value={storeName} onChange={e => setStoreName(e.target.value)} className="input" placeholder="e.g. Kwame's Data Store" autoComplete="off" />
+                  <input
+                    type="text"
+                    value={storeName}
+                    onChange={(e) => setStoreName(e.target.value)}
+                    style={inputStyle}
+                    placeholder="e.g. Kwame's Data Store"
+                    autoComplete="off"
+                  />
                   <p style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>This is the name displayed on your public store page</p>
                 </div>
                 {user?.store_slug && (
@@ -202,14 +318,24 @@ const Profile = () => {
                     </p>
                   </div>
                 )}
-                <button onClick={handleSaveStoreName} disabled={savingName} className="btn-primary" style={{ justifyContent: 'center', padding: '0.875rem' }}>
+                <button
+                  onClick={handleSaveStoreName}
+                  disabled={savingName}
+                  style={{
+                    ...buttonStyle,
+                    background: 'linear-gradient(135deg,#10b981,#059669)',
+                    color: 'white',
+                    opacity: savingName ? 0.7 : 1,
+                    cursor: savingName ? 'not-allowed' : 'pointer',
+                  }}
+                >
                   {savingName ? 'Saving...' : '💾 Save Store Name'}
                 </button>
               </div>
             </Section>
           )}
 
-          {/* ── Change Email ─────────────────────────────── */}
+          {/* Change Email */}
           <Section title="📧 Change Email">
             <Msg section="email" />
             <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>You must verify ownership with your current password.</p>
@@ -217,25 +343,42 @@ const Profile = () => {
               <form onSubmit={handleRequestEmailChange} autoComplete="off" style={{ display: 'flex', flexDirection: 'column', gap: '1.125rem' }}>
                 <div>
                   {label('New Email Address', true)}
-                  <input type="email" value={emailData.new_email} onChange={e => setEmailData({ ...emailData, new_email: e.target.value })} className="input" placeholder="newemail@example.com" autoComplete="off" required />
+                  <input
+                    type="email"
+                    value={emailData.new_email}
+                    onChange={(e) => setEmailData({ ...emailData, new_email: e.target.value })}
+                    style={inputStyle}
+                    placeholder="newemail@example.com"
+                    autoComplete="off"
+                    required
+                  />
                 </div>
                 <div>
                   {label('Current Password', true)}
-                  {/* ✅ FIX: readOnly trick prevents browser from auto-filling saved credentials */}
                   <input
                     type="password"
                     value={emailData.current_password}
-                    onChange={e => setEmailData({ ...emailData, current_password: e.target.value })}
-                    className="input"
+                    onChange={(e) => setEmailData({ ...emailData, current_password: e.target.value })}
+                    style={inputStyle}
                     placeholder="Enter your current password"
                     autoComplete="off"
                     readOnly
-                    onFocus={e => e.target.removeAttribute('readonly')}
+                    onFocus={(e) => e.target.removeAttribute('readonly')}
                     required
                   />
                   <p style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Required to confirm you own this account — type it manually</p>
                 </div>
-                <button type="submit" disabled={loading || !emailData.new_email || !emailData.current_password} className="btn-primary" style={{ justifyContent: 'center', padding: '0.875rem', opacity: !emailData.new_email || !emailData.current_password ? 0.6 : 1 }}>
+                <button
+                  type="submit"
+                  disabled={loading || !emailData.new_email || !emailData.current_password}
+                  style={{
+                    ...buttonStyle,
+                    background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+                    color: 'white',
+                    opacity: loading || !emailData.new_email || !emailData.current_password ? 0.6 : 1,
+                    cursor: loading || !emailData.new_email || !emailData.current_password ? 'not-allowed' : 'pointer',
+                  }}
+                >
                   {loading ? 'Sending...' : '📨 Send Verification Code'}
                 </button>
               </form>
@@ -249,20 +392,42 @@ const Profile = () => {
                   <input
                     type="text"
                     value={emailData.verification_code}
-                    onChange={e => setEmailData({ ...emailData, verification_code: e.target.value.replace(/\D/g, '').slice(0, 6) })}
-                    className="input"
+                    onChange={(e) => setEmailData({ ...emailData, verification_code: e.target.value.replace(/\D/g, '').slice(0, 6) })}
+                    style={{ ...inputStyle, letterSpacing: '0.5rem', fontSize: '1.3rem', textAlign: 'center', fontWeight: '700' }}
                     placeholder="123456"
                     maxLength="6"
                     required
                     autoComplete="off"
-                    style={{ letterSpacing: '0.5rem', fontSize: '1.3rem', textAlign: 'center', fontWeight: '700' }}
                   />
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
-                  <button type="submit" disabled={loading || emailData.verification_code.length !== 6} className="btn-primary" style={{ flex: 1, justifyContent: 'center', padding: '0.875rem', background: 'linear-gradient(135deg,#10b981,#059669)', opacity: emailData.verification_code.length !== 6 ? 0.6 : 1 }}>
+                  <button
+                    type="submit"
+                    disabled={loading || emailData.verification_code.length !== 6}
+                    style={{
+                      ...buttonStyle,
+                      background: 'linear-gradient(135deg,#10b981,#059669)',
+                      color: 'white',
+                      opacity: loading || emailData.verification_code.length !== 6 ? 0.6 : 1,
+                      cursor: loading || emailData.verification_code.length !== 6 ? 'not-allowed' : 'pointer',
+                    }}
+                  >
                     {loading ? 'Verifying...' : '✅ Confirm'}
                   </button>
-                  <button type="button" onClick={() => { setEmailStep(1); setEmailData({ new_email: '', current_password: '', verification_code: '' }); setMessage({ type: '', text: '', section: '' }); }} style={{ padding: '0.875rem 1.25rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '0.625rem', cursor: 'pointer', fontWeight: '600', color: 'var(--text-primary)' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmailStep(1);
+                      setEmailData({ new_email: '', current_password: '', verification_code: '' });
+                      setMessage({ type: '', text: '', section: '' });
+                    }}
+                    style={{
+                      ...buttonStyle,
+                      background: 'var(--bg-tertiary)',
+                      border: '1px solid var(--border-color)',
+                      color: 'var(--text-primary)',
+                    }}
+                  >
                     Cancel
                   </button>
                 </div>
@@ -270,33 +435,91 @@ const Profile = () => {
             )}
           </Section>
 
-          {/* ── Change Password ──────────────────────────── */}
+          {/* Change Password */}
           <Section title="🔐 Change Password">
             <Msg section="password" />
             <form onSubmit={handleChangePassword} autoComplete="off" style={{ display: 'flex', flexDirection: 'column', gap: '1.125rem' }}>
               <div>
                 {label('Current Password', true)}
-                <input type="password" value={passwordData.current_password} onChange={e => setPasswordData({ ...passwordData, current_password: e.target.value })} className="input" placeholder="••••••••" autoComplete="off" readOnly onFocus={e => e.target.removeAttribute('readonly')} required />
+                <input
+                  type="password"
+                  value={passwordData.current_password}
+                  onChange={(e) => setPasswordData({ ...passwordData, current_password: e.target.value })}
+                  style={inputStyle}
+                  placeholder="••••••••"
+                  autoComplete="off"
+                  readOnly
+                  onFocus={(e) => e.target.removeAttribute('readonly')}
+                  required
+                />
               </div>
               <div>
                 {label('New Password', true)}
-                <input type="password" value={passwordData.new_password} onChange={e => setPasswordData({ ...passwordData, new_password: e.target.value })} className="input" placeholder="Min 6 characters" autoComplete="new-password" minLength="6" required />
+                <input
+                  type="password"
+                  value={passwordData.new_password}
+                  onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
+                  style={inputStyle}
+                  placeholder="Min 6 characters"
+                  autoComplete="new-password"
+                  minLength="6"
+                  required
+                />
               </div>
               <div>
                 {label('Confirm New Password', true)}
-                <input type="password" value={passwordData.confirm_password} onChange={e => setPasswordData({ ...passwordData, confirm_password: e.target.value })} className="input" placeholder="••••••••" autoComplete="new-password" required />
+                <input
+                  type="password"
+                  value={passwordData.confirm_password}
+                  onChange={(e) => setPasswordData({ ...passwordData, confirm_password: e.target.value })}
+                  style={inputStyle}
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  required
+                />
                 {passwordData.confirm_password && passwordData.new_password !== passwordData.confirm_password && (
                   <p style={{ fontSize: '0.73rem', color: 'var(--danger)', marginTop: '0.25rem' }}>⚠️ Passwords don't match</p>
                 )}
               </div>
-              <button type="submit" disabled={loading || !passwordData.current_password || !passwordData.new_password || passwordData.new_password !== passwordData.confirm_password} className="btn-primary" style={{ justifyContent: 'center', padding: '0.875rem', background: 'linear-gradient(135deg,#f59e0b,#d97706)', opacity: (!passwordData.current_password || !passwordData.new_password || passwordData.new_password !== passwordData.confirm_password) ? 0.6 : 1 }}>
-              {loading ? 'Changing...' : '🔐 Change Password'}
+              <button
+                type="submit"
+                disabled={
+                  loading ||
+                  !passwordData.current_password ||
+                  !passwordData.new_password ||
+                  passwordData.new_password !== passwordData.confirm_password
+                }
+                style={{
+                  ...buttonStyle,
+                  background: 'linear-gradient(135deg,#f59e0b,#d97706)',
+                  color: 'white',
+                  opacity:
+                    loading ||
+                    !passwordData.current_password ||
+                    !passwordData.new_password ||
+                    passwordData.new_password !== passwordData.confirm_password
+                      ? 0.6
+                      : 1,
+                  cursor:
+                    loading ||
+                    !passwordData.current_password ||
+                    !passwordData.new_password ||
+                    passwordData.new_password !== passwordData.confirm_password
+                      ? 'not-allowed'
+                      : 'pointer',
+                }}
+              >
+                {loading ? 'Changing...' : '🔐 Change Password'}
               </button>
             </form>
           </Section>
-
         </div>
       </main>
+
+      <style>{`
+        .main-content { padding-top: 1rem; }
+        @media (max-width: 767px) { .main-content { padding-top: 0.75rem; padding-bottom: 1.5rem; } }
+      `}</style>
     </div>
   );
 };

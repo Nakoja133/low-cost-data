@@ -28,7 +28,7 @@ const MobileMenu = ({ currentPage }) => {
   const [tgLink,           setTgLink]          = useState('');
   const [helpCenterEmail,  setHelpCenterEmail] = useState('');
   const [saving,           setSaving]          = useState(false);
-
+  
   // Lock activities state
   const [lockEnabled,     setLockEnabled]      = useState(false);
   const [oldLockPassword, setOldLockPassword]  = useState('');
@@ -36,7 +36,7 @@ const MobileMenu = ({ currentPage }) => {
   const [confirmPassword, setConfirmPassword]  = useState('');
   const [accountPassword, setAccountPassword]  = useState('');
   const [lockStep,        setLockStep]         = useState('status'); // 'status', 'setup', 'toggle', 'change'
-
+  
   const { user, logout, updateUser } = useAuth();
   const { theme, toggleTheme }       = useTheme();
   const { showSuccess, showError, showPrompt } = useFeedback();
@@ -83,7 +83,6 @@ const MobileMenu = ({ currentPage }) => {
       action();
       return;
     }
-
     const password = await showPrompt({
       title: 'Lock Activities Password',
       message: 'Enter your lock activities password to continue.',
@@ -123,7 +122,7 @@ const MobileMenu = ({ currentPage }) => {
     { label: 'Profile',            path: '/profile',                  icon: '👤' },
   ];
 
-  // ── Agent menu — ✅ includes Withdrawal History ──────────────
+  // ── Agent menu ──────────────────────────────────────────────
   const agentItems = [
     { label: 'Dashboard',           path: '/agent/dashboard',           icon: '🏠' },
     { label: 'Set Prices',          path: '/agent/set-prices',          icon: '💲', requiresLock: true },
@@ -197,7 +196,6 @@ const MobileMenu = ({ currentPage }) => {
     try {
       const r = await api.get('/lock-activities/status');
       setLockEnabled(r.data.is_enabled);
-      // If password is not set, go directly to setup; otherwise show status
       setLockStep(!r.data.password_set ? 'setup' : 'status');
     } catch (err) {
       console.error('Failed to load lock status:', err);
@@ -232,7 +230,6 @@ const MobileMenu = ({ currentPage }) => {
       showError('Please enter your account password.');
       return;
     }
-
     setSaving(true);
     try {
       await api.post('/lock-activities/set-password', {
@@ -256,7 +253,6 @@ const MobileMenu = ({ currentPage }) => {
       showError('Lock password is required to toggle lock activities.');
       return;
     }
-
     setSaving(true);
     try {
       await api.post('/lock-activities/toggle', {
@@ -277,7 +273,6 @@ const MobileMenu = ({ currentPage }) => {
       showError('Please fill in all fields correctly.');
       return;
     }
-
     setSaving(true);
     try {
       await api.put('/lock-activities/change-password', {
@@ -296,11 +291,57 @@ const MobileMenu = ({ currentPage }) => {
   };
 
   // ── Shared styles ───────────────────────────────────────────
-  const overlayStyle = { position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', zIndex:2000, display:'flex', alignItems:'center', justifyContent:'center', padding:'1rem' };
-  const cardStyle    = { background:'var(--card-bg)', borderRadius:'1rem', padding:'1.5rem', width:'100%', maxWidth:'380px', border:'1px solid var(--border-color)', boxShadow:'0 20px 60px rgba(0,0,0,0.4)', animation:'popUp 0.25s cubic-bezier(0.34,1.56,0.64,1)' };
-  const inputStyle   = { width:'100%', padding:'0.75rem 1rem', border:'1px solid var(--border-color)', borderRadius:'0.5rem', background:'var(--bg-secondary)', color:'var(--text-primary)', fontSize:'0.95rem', marginTop:'0.75rem' };
-  const btnRow       = { display:'flex', gap:'0.75rem', marginTop:'1rem' };
-  const cancelBtn    = { flex:1, padding:'0.75rem', background:'var(--bg-tertiary)', border:'1px solid var(--border-color)', borderRadius:'0.5rem', color:'var(--text-primary)', cursor:'pointer', fontWeight:'600' };
+  const overlayStyle = { 
+    position: 'fixed', 
+    inset: 0, 
+    background: 'rgba(0,0,0,0.7)', 
+    zIndex: 2000, 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    padding: '1rem' 
+  };
+  
+  const cardStyle = { 
+    background: 'var(--card-bg)', 
+    borderRadius: '1rem', 
+    padding: '1.5rem', 
+    width: '100%', 
+    maxWidth: '380px', 
+    border: '1px solid var(--border-color)', 
+    boxShadow: '0 20px 60px rgba(0,0,0,0.4)', 
+    animation: 'popUp 0.25s cubic-bezier(0.34,1.56,0.64,1)' 
+  };
+  
+  const inputStyle = { 
+    width: '100%', 
+    padding: '0.75rem 1rem', 
+    border: '1px solid var(--border-color)', 
+    borderRadius: '0.5rem', 
+    background: 'var(--bg-secondary)', 
+    color: 'var(--text-primary)', 
+    fontSize: '0.95rem', 
+    marginTop: '0.75rem',
+    boxSizing: 'border-box'
+  };
+  
+  const btnRow = { 
+    display: 'flex', 
+    gap: '0.75rem', 
+    marginTop: '1rem' 
+  };
+  
+  const cancelBtn = { 
+    flex: 1, 
+    padding: '0.75rem', 
+    background: 'var(--bg-tertiary)', 
+    border: '1px solid var(--border-color)', 
+    borderRadius: '0.5rem', 
+    color: 'var(--text-primary)', 
+    cursor: 'pointer', 
+    fontWeight: '600' 
+  };
+
   const lockPasswordInputProps = (name) => ({
     autoComplete: 'new-password',
     name,
@@ -309,55 +350,193 @@ const MobileMenu = ({ currentPage }) => {
   });
 
   const itemStyle = (active) => ({
-    width:'100%', display:'flex', alignItems:'center', gap:'0.875rem',
-    padding:'0.875rem 1rem', background:active ? 'var(--bg-secondary)':'none',
-    border:'none', borderRadius:'0.5rem', color:'var(--text-primary)',
-    fontSize:'0.95rem', fontWeight:active ? '700':'400', cursor:'pointer',
-    textAlign:'left', transition:'background 0.15s',
+    width: '100%', 
+    display: 'flex', 
+    alignItems: 'center', 
+    gap: '0.875rem',
+    padding: '0.875rem 1rem', 
+    background: active ? 'var(--bg-secondary)' : 'none',
+    border: 'none', 
+    borderRadius: '0.5rem', 
+    color: 'var(--text-primary)',
+    fontSize: '0.95rem', 
+    fontWeight: active ? '700' : '400', 
+    cursor: 'pointer',
+    textAlign: 'left', 
+    transition: 'background 0.15s',
   });
 
   return (
     <>
       {/* Sticky header */}
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'0.875rem 1.25rem', background:'var(--card-bg)', borderBottom:'1px solid var(--border-color)', position:'sticky', top:0, zIndex:1000, boxShadow:'0 2px 8px rgba(0,0,0,0.08)' }}>
-        <div style={{ fontWeight:'800', fontSize:'1rem', background:'linear-gradient(135deg,#6366f1,#8b5cf6)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        padding: '0.875rem 1.25rem', 
+        background: 'var(--card-bg)', 
+        borderBottom: '1px solid var(--border-color)', 
+        position: 'sticky', 
+        top: 0, 
+        zIndex: 1000, 
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)' 
+      }}>
+        <div style={{ 
+          fontWeight: '800', 
+          fontSize: '1rem', 
+          background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', 
+          WebkitBackgroundClip: 'text', 
+          WebkitTextFillColor: 'transparent' 
+        }}>
           {user?.role === 'admin' ? '🎛️ Admin' : `🏪 ${user?.store_name || 'Agent'}`}
         </div>
-        <div style={{ display:'flex', alignItems:'center', gap:'0.5rem' }}>
-          <button onClick={toggleTheme} style={{ background:'none', border:'none', color:'var(--text-primary)', fontSize:'1.3rem', cursor:'pointer', padding:'0.2rem 0.35rem', lineHeight:1, width:'2.3rem', height:'2.3rem', display:'grid', placeItems:'center' }}>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <button 
+            onClick={toggleTheme} 
+            style={{ 
+              background: 'none', 
+              border: 'none', 
+              color: 'var(--text-primary)', 
+              fontSize: '1.3rem', 
+              cursor: 'pointer', 
+              padding: '0.2rem 0.35rem', 
+              lineHeight: 1, 
+              width: '2.3rem', 
+              height: '2.3rem', 
+              display: 'grid', 
+              placeItems: 'center' 
+            }}>
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
-          <button onClick={() => setIsOpen(o => !o)} style={{ background:'none', border:'none', color:'var(--text-primary)', fontSize:'1.5rem', cursor:'pointer', padding:'0.25rem 0.5rem', lineHeight:1 }}>
+          
+          <button 
+            onClick={() => setIsOpen(o => !o)} 
+            style={{ 
+              background: 'none', 
+              border: 'none', 
+              color: 'var(--text-primary)', 
+              fontSize: '1.5rem', 
+              cursor: 'pointer', 
+              padding: '0.25rem 0.5rem', 
+              lineHeight: 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
             {isOpen ? '✕' : '☰'}
+            {/* Lock status indicator - subtle */}
+            {user && (
+              <span style={{ 
+                fontSize: '0.75rem', 
+                color: lockEnabled ? 'var(--success)' : 'var(--text-muted)',
+                fontWeight: '600'
+              }}>
+                {lockEnabled ? '🔒' : '🔓'}
+              </span>
+            )}
           </button>
         </div>
       </div>
 
       {/* Slide-up drawer */}
       {isOpen && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', zIndex:999, display:'flex', flexDirection:'column', justifyContent:'flex-end' }} onClick={close}>
-          <div style={{ background:'var(--card-bg)', borderRadius:'1.25rem 1.25rem 0 0', padding:'1.25rem', maxHeight:'88vh', overflowY:'auto', animation:'slideUp 0.28s ease' }} onClick={e => e.stopPropagation()}>
+        <div 
+          style={{ 
+            position: 'fixed', 
+            inset: 0, 
+            background: 'rgba(0,0,0,0.6)', 
+            zIndex: 999, 
+            display: 'flex', 
+            flexDirection: 'column', 
+            justifyContent: 'flex-end' 
+          }} 
+          onClick={close}>
+          <div 
+            style={{ 
+              background: 'var(--card-bg)', 
+              borderRadius: '1.25rem 1.25rem 0 0', 
+              padding: '1.25rem', 
+              maxHeight: '88vh', 
+              overflowY: 'auto', 
+              animation: 'slideUp 0.28s ease' 
+            }} 
+            onClick={e => e.stopPropagation()}>
 
-            <div style={{ width:'40px', height:'4px', background:'var(--border-color)', borderRadius:'2px', margin:'0 auto 1.25rem' }} />
+            <div style={{ 
+              width: '40px', 
+              height: '4px', 
+              background: 'var(--border-color)', 
+              borderRadius: '2px', 
+              margin: '0 auto 1.25rem' 
+            }} />
 
             {/* User info */}
-            <div style={{ padding:'1rem', background:'var(--bg-secondary)', borderRadius:'0.875rem', marginBottom:'1rem', display:'flex', alignItems:'center', gap:'0.875rem' }}>
-              <div style={{ width:'42px', height:'42px', borderRadius:'50%', background:'linear-gradient(135deg,#6366f1,#8b5cf6)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1.2rem', flexShrink:0 }}>
+            <div style={{ 
+              padding: '1rem', 
+              background: 'var(--bg-secondary)', 
+              borderRadius: '0.875rem', 
+              marginBottom: '1rem', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.875rem' 
+            }}>
+              <div style={{ 
+                width: '42px', 
+                height: '42px', 
+                borderRadius: '50%', 
+                background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                fontSize: '1.2rem', 
+                flexShrink: 0 
+              }}>
                 {user?.role === 'admin' ? '🎛️' : '👤'}
               </div>
-              <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ fontWeight:'700', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user?.username || user?.email?.split('@')[0]}</div>
-                <div style={{ fontSize:'0.78rem', color:'var(--text-secondary)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user?.email}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ 
+                  fontWeight: '700', 
+                  overflow: 'hidden', 
+                  textOverflow: 'ellipsis', 
+                  whiteSpace: 'nowrap' 
+                }}>
+                  {user?.username || user?.email?.split('@')[0]}
+                </div>
+                <div style={{ 
+                  fontSize: '0.78rem', 
+                  color: 'var(--text-secondary)', 
+                  overflow: 'hidden', 
+                  textOverflow: 'ellipsis', 
+                  whiteSpace: 'nowrap' 
+                }}>
+                  {user?.email}
+                </div>
               </div>
-              <span style={{ padding:'0.2rem 0.6rem', background:user?.role==='admin'?'rgba(139,92,246,0.2)':'rgba(59,130,246,0.2)', color:user?.role==='admin'?'#8b5cf6':'#3b82f6', borderRadius:'9999px', fontSize:'0.7rem', fontWeight:'700', textTransform:'uppercase', flexShrink:0 }}>
+              <span style={{ 
+                padding: '0.2rem 0.6rem', 
+                background: user?.role === 'admin' ? 'rgba(139,92,246,0.2)' : 'rgba(59,130,246,0.2)', 
+                color: user?.role === 'admin' ? '#8b5cf6' : '#3b82f6', 
+                borderRadius: '9999px', 
+                fontSize: '0.7rem', 
+                fontWeight: '700', 
+                textTransform: 'uppercase', 
+                flexShrink: 0 
+              }}>
                 {user?.role}
               </span>
             </div>
 
             {/* Nav items */}
-            <div style={{ display:'flex', flexDirection:'column', gap:'0.2rem', marginBottom:'1rem' }}>
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: '0.2rem', 
+              marginBottom: '1rem' 
+            }}>
               {menuItems.map((item) => (
-                <button key={item.label}
+                <button 
+                  key={item.label}
                   onClick={() => {
                     const execute = () => {
                       if (item.action) {
@@ -379,42 +558,89 @@ const MobileMenu = ({ currentPage }) => {
                       execute();
                     }
                   }}
-                  style={itemStyle(currentPage === item.path)}
-                >
-                  <span style={{ fontSize:'1.15rem', width:'24px', textAlign:'center' }}>{item.icon}</span>
-                  <span>{item.label}{item.requiresLock ? (lockEnabled ? ' 🔒' : ' 🔓') : ''}</span>
+                  style={itemStyle(currentPage === item.path)}>
+                  <span style={{ fontSize: '1.15rem', width: '24px', textAlign: 'center' }}>
+                    {item.icon}
+                  </span>
+                  <span>{item.label}</span>
                 </button>
               ))}
             </div>
 
             {/* Admin: navigation sections */}
             {user?.role === 'admin' && (
-              <div style={{ borderTop:'1px solid var(--border-color)', paddingTop:'0.875rem', marginBottom:'0.875rem', display:'flex', flexDirection:'column', gap:'1rem' }}>
-                    <div>
-                  <p style={{ fontSize:'0.7rem', fontWeight:'700', color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.08em', padding:'0 1rem 0.25rem' }}>Platform</p>
+              <div style={{ 
+                borderTop: '1px solid var(--border-color)', 
+                paddingTop: '0.875rem', 
+                marginBottom: '0.875rem', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '1rem' 
+              }}>
+                <div>
+                  <p style={{ 
+                    fontSize: '0.7rem', 
+                    fontWeight: '700', 
+                    color: 'var(--text-muted)', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.08em', 
+                    padding: '0 1rem 0.25rem' 
+                  }}>
+                    Platform
+                  </p>
                   {[
                     { label: '📜 Terms/Rules',     action: () => go('/admin/terms'), needsLock: true },
                     { label: '💰 Min Withdrawal',  action: () => go('/admin/lock-action/min-withdrawal'), needsLock: true },
                   ].map(b => (
-                    <button key={b.label} onClick={b.action} style={itemStyle(false)}>{b.label}{b.needsLock ? (lockEnabled ? ' 🔒' : ' 🔓') : ''}</button>
+                    <button 
+                      key={b.label} 
+                      onClick={b.action} 
+                      style={itemStyle(false)}>
+                      {b.label}
+                    </button>
                   ))}
                 </div>
 
                 <div>
-                  <p style={{ fontSize:'0.7rem', fontWeight:'700', color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.08em', padding:'0 1rem 0.25rem' }}>Support Links</p>
+                  <p style={{ 
+                    fontSize: '0.7rem', 
+                    fontWeight: '700', 
+                    color: 'var(--text-muted)', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.08em', 
+                    padding: '0 1rem 0.25rem' 
+                  }}>
+                    Support Links
+                  </p>
                   {[
                     { label: '💬 WhatsApp Group',   action: () => go('/admin/lock-action/whatsapp-group'), needsLock: true },
                     { label: '✈️ Telegram Link',   action: () => go('/admin/lock-action/telegram-link'), needsLock: true },
                     { label: '📧 Help Center Email', action: () => go('/admin/lock-action/help-center-email'), needsLock: true },
                   ].map(b => (
-                    <button key={b.label} onClick={b.action} style={itemStyle(false)}>{b.label}{b.needsLock ? (lockEnabled ? ' 🔒' : ' 🔓') : ''}</button>
+                    <button 
+                      key={b.label} 
+                      onClick={b.action} 
+                      style={itemStyle(false)}>
+                      {b.label}
+                    </button>
                   ))}
                 </div>
 
                 <div>
-                  <p style={{ fontSize:'0.7rem', fontWeight:'700', color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.08em', padding:'0 1rem 0.25rem' }}>Security</p>
-                  <button onClick={openLockModal} style={itemStyle(false)}>
-                    <span style={{ fontSize:'1.15rem', width:'24px', textAlign:'center' }}>🔒</span>
+                  <p style={{ 
+                    fontSize: '0.7rem', 
+                    fontWeight: '700', 
+                    color: 'var(--text-muted)', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.08em', 
+                    padding: '0 1rem 0.25rem' 
+                  }}>
+                    Security
+                  </p>
+                  <button 
+                    onClick={openLockModal} 
+                    style={itemStyle(false)}>
+                    <span style={{ fontSize: '1.15rem', width: '24px', textAlign: 'center' }}>🔒</span>
                     <span>Lock Activities</span>
                   </button>
                 </div>
@@ -423,20 +649,47 @@ const MobileMenu = ({ currentPage }) => {
 
             {/* Agent: store name & lock activities */}
             {user?.role === 'agent' && (
-              <div style={{ borderTop:'1px solid var(--border-color)', paddingTop:'0.875rem', marginBottom:'0.875rem', display:'flex', flexDirection:'column', gap:'0.2rem' }}>
-                <button onClick={() => secureAction(() => { setShowStoreModal(true); close(); })} style={itemStyle(false)}>
-                  <span style={{ fontSize:'1.15rem', width:'24px', textAlign:'center' }}>🏷️</span>
-                  <span>Change Store Name {lockEnabled ? '🔒' : '🔓'}</span>
+              <div style={{ 
+                borderTop: '1px solid var(--border-color)', 
+                paddingTop: '0.875rem', 
+                marginBottom: '0.875rem', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '0.2rem' 
+              }}>
+                <button 
+                  onClick={() => secureAction(() => { setShowStoreModal(true); close(); })} 
+                  style={itemStyle(false)}>
+                  <span style={{ fontSize: '1.15rem', width: '24px', textAlign: 'center' }}>🏷️</span>
+                  <span>Change Store Name</span>
                 </button>
-                <button onClick={openLockModal} style={itemStyle(false)}>
-                  <span style={{ fontSize:'1.15rem', width:'24px', textAlign:'center' }}>🔒</span>
+                <button 
+                  onClick={openLockModal} 
+                  style={itemStyle(false)}>
+                  <span style={{ fontSize: '1.15rem', width: '24px', textAlign: 'center' }}>🔒</span>
                   <span>Lock Activities</span>
                 </button>
               </div>
             )}
 
             {/* Logout */}
-            <button onClick={handleLogout} style={{ width:'100%', padding:'0.875rem', background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.25)', borderRadius:'0.625rem', color:'var(--danger)', fontSize:'0.95rem', fontWeight:'700', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:'0.5rem' }}>
+            <button 
+              onClick={handleLogout} 
+              style={{ 
+                width: '100%', 
+                padding: '0.875rem', 
+                background: 'rgba(239,68,68,0.1)', 
+                border: '1px solid rgba(239,68,68,0.25)', 
+                borderRadius: '0.625rem', 
+                color: 'var(--danger)', 
+                fontSize: '0.95rem', 
+                fontWeight: '700', 
+                cursor: 'pointer', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                gap: '0.5rem' 
+              }}>
               🚪 Logout
             </button>
           </div>
@@ -447,42 +700,128 @@ const MobileMenu = ({ currentPage }) => {
       {showMinModal && (
         <div style={overlayStyle} onClick={() => setShowMinModal(false)}>
           <div style={cardStyle} onClick={e => e.stopPropagation()}>
-            <h3 style={{ fontWeight:'700' }}>💰 Set Minimum Withdrawal</h3>
-            <p style={{ fontSize:'0.82rem', color:'var(--text-secondary)', marginTop:'0.25rem' }}>Agents will be notified of the change.</p>
-            <input type="number" step="0.01" min="0" value={minAmount} onChange={e => setMinAmount(e.target.value)} style={inputStyle} placeholder="e.g. 10.00" autoFocus />
+            <h3 style={{ fontWeight: '700' }}>💰 Set Minimum Withdrawal</h3>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+              Agents will be notified of the change.
+            </p>
+            <input 
+              type="number" 
+              step="0.01" 
+              min="0" 
+              value={minAmount} 
+              onChange={e => setMinAmount(e.target.value)} 
+              style={inputStyle} 
+              placeholder="e.g. 10.00" 
+              autoFocus 
+            />
             <div style={btnRow}>
-              <button onClick={() => setShowMinModal(false)} style={cancelBtn}>Cancel</button>
-              <button onClick={saveMinWithdrawal} disabled={saving} style={{ flex:2, padding:'0.75rem', background:'linear-gradient(135deg,#6366f1,#8b5cf6)', color:'white', border:'none', borderRadius:'0.5rem', cursor:'pointer', fontWeight:'700', opacity:saving?0.7:1 }}>{saving?'Saving...':'Save'}</button>
+              <button 
+                onClick={() => setShowMinModal(false)} 
+                style={cancelBtn}>
+                Cancel
+              </button>
+              <button 
+                onClick={saveMinWithdrawal} 
+                disabled={saving} 
+                style={{ 
+                  flex: 2, 
+                  padding: '0.75rem', 
+                  background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', 
+                  color: 'white', 
+                  border: 'none', 
+                  borderRadius: '0.5rem', 
+                  cursor: 'pointer', 
+                  fontWeight: '700', 
+                  opacity: saving ? 0.7 : 1 
+                }}>
+                {saving ? 'Saving...' : 'Save'}
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* WhatsApp Modal — ✅ loads previous value */}
+      {/* WhatsApp Modal */}
       {showWaModal && (
         <div style={overlayStyle} onClick={() => setShowWaModal(false)}>
           <div style={cardStyle} onClick={e => e.stopPropagation()}>
-            <h3 style={{ fontWeight:'700' }}>💬 WhatsApp Group Link</h3>
-            <p style={{ fontSize:'0.82rem', color:'var(--text-secondary)', marginTop:'0.25rem' }}>Edit or replace the current link. Agents will be notified.</p>
-            <input type="url" value={waLink} onChange={e => setWaLink(e.target.value)} style={inputStyle} placeholder="https://chat.whatsapp.com/..." autoFocus />
+            <h3 style={{ fontWeight: '700' }}>💬 WhatsApp Group Link</h3>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+              Edit or replace the current link. Agents will be notified.
+            </p>
+            <input 
+              type="url" 
+              value={waLink} 
+              onChange={e => setWaLink(e.target.value)} 
+              style={inputStyle} 
+              placeholder="https://chat.whatsapp.com/..." 
+              autoFocus 
+            />
             <div style={btnRow}>
-              <button onClick={() => setShowWaModal(false)} style={cancelBtn}>Cancel</button>
-              <button onClick={saveWaLink} disabled={saving} style={{ flex:2, padding:'0.75rem', background:'linear-gradient(135deg,#25d366,#128c7e)', color:'white', border:'none', borderRadius:'0.5rem', cursor:'pointer', fontWeight:'700', opacity:saving?0.7:1 }}>{saving?'Saving...':'Save Link'}</button>
+              <button 
+                onClick={() => setShowWaModal(false)} 
+                style={cancelBtn}>
+                Cancel
+              </button>
+              <button 
+                onClick={saveWaLink} 
+                disabled={saving} 
+                style={{ 
+                  flex: 2, 
+                  padding: '0.75rem', 
+                  background: 'linear-gradient(135deg,#25d366,#128c7e)', 
+                  color: 'white', 
+                  border: 'none', 
+                  borderRadius: '0.5rem', 
+                  cursor: 'pointer', 
+                  fontWeight: '700', 
+                  opacity: saving ? 0.7 : 1 
+                }}>
+                {saving ? 'Saving...' : 'Save Link'}
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Telegram Modal — ✅ loads previous value */}
+      {/* Telegram Modal */}
       {showTgModal && (
         <div style={overlayStyle} onClick={() => setShowTgModal(false)}>
           <div style={cardStyle} onClick={e => e.stopPropagation()}>
-            <h3 style={{ fontWeight:'700' }}>✈️ Telegram Link</h3>
-            <p style={{ fontSize:'0.82rem', color:'var(--text-secondary)', marginTop:'0.25rem' }}>Edit or replace the current link. Agents will be notified.</p>
-            <input type="url" value={tgLink} onChange={e => setTgLink(e.target.value)} style={inputStyle} placeholder="https://t.me/..." autoFocus />
+            <h3 style={{ fontWeight: '700' }}>✈️ Telegram Link</h3>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+              Edit or replace the current link. Agents will be notified.
+            </p>
+            <input 
+              type="url" 
+              value={tgLink} 
+              onChange={e => setTgLink(e.target.value)} 
+              style={inputStyle} 
+              placeholder="https://t.me/..." 
+              autoFocus 
+            />
             <div style={btnRow}>
-              <button onClick={() => setShowTgModal(false)} style={cancelBtn}>Cancel</button>
-              <button onClick={saveTgLink} disabled={saving} style={{ flex:2, padding:'0.75rem', background:'linear-gradient(135deg,#0088cc,#006aaa)', color:'white', border:'none', borderRadius:'0.5rem', cursor:'pointer', fontWeight:'700', opacity:saving?0.7:1 }}>{saving?'Saving...':'Save Link'}</button>
+              <button 
+                onClick={() => setShowTgModal(false)} 
+                style={cancelBtn}>
+                Cancel
+              </button>
+              <button 
+                onClick={saveTgLink} 
+                disabled={saving} 
+                style={{ 
+                  flex: 2, 
+                  padding: '0.75rem', 
+                  background: 'linear-gradient(135deg,#0088cc,#006aaa)', 
+                  color: 'white', 
+                  border: 'none', 
+                  borderRadius: '0.5rem', 
+                  cursor: 'pointer', 
+                  fontWeight: '700', 
+                  opacity: saving ? 0.7 : 1 
+                }}>
+                {saving ? 'Saving...' : 'Save Link'}
+              </button>
             </div>
           </div>
         </div>
@@ -492,12 +831,40 @@ const MobileMenu = ({ currentPage }) => {
       {showHelpEmailModal && (
         <div style={overlayStyle} onClick={() => setShowHelpEmailModal(false)}>
           <div style={cardStyle} onClick={e => e.stopPropagation()}>
-            <h3 style={{ fontWeight:'700' }}>📧 Help Center Email</h3>
-            <p style={{ fontSize:'0.82rem', color:'var(--text-secondary)', marginTop:'0.25rem' }}>Set the email address agents and users should contact for support.</p>
-            <input type="email" value={helpCenterEmail} onChange={e => setHelpCenterEmail(e.target.value)} style={inputStyle} placeholder="help@example.com" autoFocus />
+            <h3 style={{ fontWeight: '700' }}>📧 Help Center Email</h3>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+              Set the email address agents and users should contact for support.
+            </p>
+            <input 
+              type="email" 
+              value={helpCenterEmail} 
+              onChange={e => setHelpCenterEmail(e.target.value)} 
+              style={inputStyle} 
+              placeholder="help@example.com" 
+              autoFocus 
+            />
             <div style={btnRow}>
-              <button onClick={() => setShowHelpEmailModal(false)} style={cancelBtn}>Cancel</button>
-              <button onClick={saveHelpCenterEmail} disabled={saving} style={{ flex:2, padding:'0.75rem', background:'linear-gradient(135deg,#6366f1,#8b5cf6)', color:'white', border:'none', borderRadius:'0.5rem', cursor:'pointer', fontWeight:'700', opacity:saving?0.7:1 }}>{saving?'Saving...':'Save Email'}</button>
+              <button 
+                onClick={() => setShowHelpEmailModal(false)} 
+                style={cancelBtn}>
+                Cancel
+              </button>
+              <button 
+                onClick={saveHelpCenterEmail} 
+                disabled={saving} 
+                style={{ 
+                  flex: 2, 
+                  padding: '0.75rem', 
+                  background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', 
+                  color: 'white', 
+                  border: 'none', 
+                  borderRadius: '0.5rem', 
+                  cursor: 'pointer', 
+                  fontWeight: '700', 
+                  opacity: saving ? 0.7 : 1 
+                }}>
+                {saving ? 'Saving...' : 'Save Email'}
+              </button>
             </div>
           </div>
         </div>
@@ -507,12 +874,40 @@ const MobileMenu = ({ currentPage }) => {
       {showStoreModal && (
         <div style={overlayStyle} onClick={() => setShowStoreModal(false)}>
           <div style={cardStyle} onClick={e => e.stopPropagation()}>
-            <h3 style={{ fontWeight:'700' }}>🏷️ Change Store Name</h3>
-            <p style={{ fontSize:'0.82rem', color:'var(--text-secondary)', marginTop:'0.25rem' }}>This also updates your store URL.</p>
-            <input type="text" value={storeName} onChange={e => setStoreName(e.target.value)} style={inputStyle} placeholder="e.g. Kwame's Data Store" autoFocus />
+            <h3 style={{ fontWeight: '700' }}>🏷️ Change Store Name</h3>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+              This also updates your store URL.
+            </p>
+            <input 
+              type="text" 
+              value={storeName} 
+              onChange={e => setStoreName(e.target.value)} 
+              style={inputStyle} 
+              placeholder="e.g. Kwame's Data Store" 
+              autoFocus 
+            />
             <div style={btnRow}>
-              <button onClick={() => setShowStoreModal(false)} style={cancelBtn}>Cancel</button>
-              <button onClick={saveStoreName} disabled={saving} style={{ flex:2, padding:'0.75rem', background:'linear-gradient(135deg,#6366f1,#8b5cf6)', color:'white', border:'none', borderRadius:'0.5rem', cursor:'pointer', fontWeight:'700', opacity:saving?0.7:1 }}>{saving?'Saving...':'Update'}</button>
+              <button 
+                onClick={() => setShowStoreModal(false)} 
+                style={cancelBtn}>
+                Cancel
+              </button>
+              <button 
+                onClick={saveStoreName} 
+                disabled={saving} 
+                style={{ 
+                  flex: 2, 
+                  padding: '0.75rem', 
+                  background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', 
+                  color: 'white', 
+                  border: 'none', 
+                  borderRadius: '0.5rem', 
+                  cursor: 'pointer', 
+                  fontWeight: '700', 
+                  opacity: saving ? 0.7 : 1 
+                }}>
+                {saving ? 'Saving...' : 'Update'}
+              </button>
             </div>
           </div>
         </div>
@@ -522,31 +917,70 @@ const MobileMenu = ({ currentPage }) => {
       {showLockModal && (
         <div style={overlayStyle} onClick={() => { setShowLockModal(false); resetLockForm(); }}>
           <div style={cardStyle} onClick={e => e.stopPropagation()}>
-            <h3 style={{ fontWeight:'700' }}>🔒 Lock Activities</h3>
-            <p style={{ fontSize:'0.82rem', color:'var(--text-secondary)', marginTop:'0.25rem' }}>
+            <h3 style={{ fontWeight: '700' }}>🔒 Lock Activities</h3>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
               {lockStep === 'setup' ? 'Set up a lock password to protect your sensitive activities.' :
                lockStep === 'status' ? 'Manage your lock activities protection.' :
-               'Enter your lock password to proceed.'}
+                'Enter your lock password to proceed.'}
             </p>
 
             {lockStep === 'status' && (
-              <div style={{ marginTop:'1rem' }}>
-                <div style={{ padding:'1rem', background:'var(--bg-secondary)', borderRadius:'0.5rem', marginBottom:'1rem' }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'0.5rem' }}>
-                    <span style={{ fontWeight:'600' }}>Status:</span>
-                    <span style={{ color:lockEnabled?'var(--success)':'var(--text-muted)', fontWeight:'700' }}>
+              <div style={{ marginTop: '1rem' }}>
+                <div style={{ 
+                  padding: '1rem', 
+                  background: 'var(--bg-secondary)', 
+                  borderRadius: '0.5rem', 
+                  marginBottom: '1rem' 
+                }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    marginBottom: '0.5rem' 
+                  }}>
+                    <span style={{ fontWeight: '600' }}>Status:</span>
+                    <span style={{ 
+                      color: lockEnabled ? 'var(--success)' : 'var(--text-muted)', 
+                      fontWeight: '700' 
+                    }}>
                       {lockEnabled ? '🔓 Enabled' : '🔒 Disabled'}
                     </span>
                   </div>
-                  <p style={{ fontSize:'0.8rem', color:'var(--text-secondary)', margin:0 }}>
-                    {lockEnabled ? 'Your sensitive activities are protected with a lock password.' : 'Set up a lock password to protect withdrawals and other sensitive actions.'}
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>
+                    {lockEnabled 
+                      ? 'Your sensitive activities are protected with a lock password.' 
+                      : 'Set up a lock password to protect withdrawals and other sensitive actions.'}
                   </p>
                 </div>
-                <div style={{ display:'flex', gap:'0.5rem' }}>
-                  <button onClick={() => setLockStep('change')} style={{ flex:1, padding:'0.75rem', background:'rgba(99,102,241,0.1)', border:'1px solid rgba(99,102,241,0.3)', borderRadius:'0.5rem', color:'var(--primary)', cursor:'pointer', fontWeight:'700', fontSize:'0.85rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button 
+                    onClick={() => setLockStep('change')} 
+                    style={{ 
+                      flex: 1, 
+                      padding: '0.75rem', 
+                      background: 'rgba(99,102,241,0.1)', 
+                      border: '1px solid rgba(99,102,241,0.3)', 
+                      borderRadius: '0.5rem', 
+                      color: 'var(--primary)', 
+                      cursor: 'pointer', 
+                      fontWeight: '700', 
+                      fontSize: '0.85rem' 
+                    }}>
                     🔄 Change Password
                   </button>
-                  <button onClick={() => setLockStep('toggle')} style={{ flex:1, padding:'0.75rem', background:lockEnabled?'rgba(239,68,68,0.1)':'rgba(16,185,129,0.1)', border:`1px solid ${lockEnabled?'rgba(239,68,68,0.3)':'rgba(16,185,129,0.3)'}`, borderRadius:'0.5rem', color:lockEnabled?'var(--danger)':'var(--success)', cursor:'pointer', fontWeight:'700', fontSize:'0.85rem' }}>
+                  <button 
+                    onClick={() => setLockStep('toggle')} 
+                    style={{ 
+                      flex: 1, 
+                      padding: '0.75rem', 
+                      background: lockEnabled ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)', 
+                      border: `1px solid ${lockEnabled ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)'}`, 
+                      borderRadius: '0.5rem', 
+                      color: lockEnabled ? 'var(--danger)' : 'var(--success)', 
+                      cursor: 'pointer', 
+                      fontWeight: '700', 
+                      fontSize: '0.85rem' 
+                    }}>
                     {lockEnabled ? '🔓 Disable' : '🔒 Enable'}
                   </button>
                 </div>
@@ -554,9 +988,14 @@ const MobileMenu = ({ currentPage }) => {
             )}
 
             {(lockStep === 'setup' || lockStep === 'change') && (
-              <div style={{ marginTop:'1rem' }}>
-                <div style={{ marginBottom:'1rem' }}>
-                  <label style={{ display:'block', fontSize:'0.85rem', fontWeight:'600', marginBottom:'0.25rem' }}>
+              <div style={{ marginTop: '1rem' }}>
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ 
+                    display: 'block', 
+                    fontSize: '0.85rem', 
+                    fontWeight: '600', 
+                    marginBottom: '0.25rem' 
+                  }}>
                     {lockStep === 'setup' ? 'Account Password' : 'Current Lock Password'}
                   </label>
                   <input
@@ -568,45 +1007,141 @@ const MobileMenu = ({ currentPage }) => {
                     placeholder={lockStep === 'setup' ? 'Enter your account password' : 'Enter your current lock password'}
                   />
                 </div>
-                <div style={{ marginBottom:'1rem' }}>
-                  <label style={{ display:'block', fontSize:'0.85rem', fontWeight:'600', marginBottom:'0.25rem' }}>New Lock Password</label>
-                  <input type="password" value={newLockPassword} onChange={e => setNewLockPassword(e.target.value)} {...lockPasswordInputProps('lock-new-password')} style={inputStyle} placeholder="At least 4 characters" />
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ 
+                    display: 'block', 
+                    fontSize: '0.85rem', 
+                    fontWeight: '600', 
+                    marginBottom: '0.25rem' 
+                  }}>
+                    New Lock Password
+                  </label>
+                  <input 
+                    type="password" 
+                    value={newLockPassword} 
+                    onChange={e => setNewLockPassword(e.target.value)} 
+                    {...lockPasswordInputProps('lock-new-password')} 
+                    style={inputStyle} 
+                    placeholder="At least 4 characters" 
+                  />
                 </div>
-                <div style={{ marginBottom:'1rem' }}>
-                  <label style={{ display:'block', fontSize:'0.85rem', fontWeight:'600', marginBottom:'0.25rem' }}>Confirm New Lock Password</label>
-                  <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} {...lockPasswordInputProps('lock-confirm-password')} style={inputStyle} placeholder="Confirm your lock password" />
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ 
+                    display: 'block', 
+                    fontSize: '0.85rem', 
+                    fontWeight: '600', 
+                    marginBottom: '0.25rem' 
+                  }}>
+                    Confirm New Lock Password
+                  </label>
+                  <input 
+                    type="password" 
+                    value={confirmPassword} 
+                    onChange={e => setConfirmPassword(e.target.value)} 
+                    {...lockPasswordInputProps('lock-confirm-password')} 
+                    style={inputStyle} 
+                    placeholder="Confirm your lock password" 
+                  />
                 </div>
-                <button onClick={lockStep === 'setup' ? setupLockPassword : changeLockPassword} disabled={saving || !newLockPassword || !confirmPassword || (lockStep === 'setup' ? !accountPassword : !oldLockPassword)} style={{ width:'100%', padding:'0.875rem', background:'linear-gradient(135deg,#6366f1,#8b5cf6)', color:'white', border:'none', borderRadius:'0.5rem', cursor:'pointer', fontWeight:'700', opacity:(saving || !newLockPassword || !confirmPassword || (lockStep === 'setup' ? !accountPassword : !oldLockPassword))?0.7:1 }}>
+                <button 
+                  onClick={lockStep === 'setup' ? setupLockPassword : changeLockPassword} 
+                  disabled={saving || !newLockPassword || !confirmPassword || (lockStep === 'setup' ? !accountPassword : !oldLockPassword)} 
+                  style={{ 
+                    width: '100%', 
+                    padding: '0.875rem', 
+                    background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '0.5rem', 
+                    cursor: 'pointer', 
+                    fontWeight: '700', 
+                    opacity: (saving || !newLockPassword || !confirmPassword || (lockStep === 'setup' ? !accountPassword : !oldLockPassword)) ? 0.7 : 1 
+                  }}>
                   {saving ? 'Saving...' : `🔒 ${lockStep === 'setup' ? 'Set' : 'Change'} Lock Password`}
                 </button>
               </div>
             )}
 
             {lockStep === 'toggle' && (
-              <div style={{ marginTop:'1rem' }}>
-                <div style={{ marginBottom:'1rem' }}>
-                  <label style={{ display:'block', fontSize:'0.85rem', fontWeight:'600', marginBottom:'0.25rem' }}>Lock Password</label>
-                  <input type="password" value={oldLockPassword} onChange={e => setOldLockPassword(e.target.value)} {...lockPasswordInputProps('lock-toggle-password')} style={inputStyle} placeholder="Enter your lock password" />
+              <div style={{ marginTop: '1rem' }}>
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ 
+                    display: 'block', 
+                    fontSize: '0.85rem', 
+                    fontWeight: '600', 
+                    marginBottom: '0.25rem' 
+                  }}>
+                    Lock Password
+                  </label>
+                  <input 
+                    type="password" 
+                    value={oldLockPassword} 
+                    onChange={e => setOldLockPassword(e.target.value)} 
+                    {...lockPasswordInputProps('lock-toggle-password')} 
+                    style={inputStyle} 
+                    placeholder="Enter your lock password" 
+                  />
                 </div>
-                <button onClick={toggleLockActivities} disabled={saving || !oldLockPassword} style={{ width:'100%', padding:'0.875rem', background:lockEnabled?'rgba(239,68,68,0.1)':'rgba(16,185,129,0.1)', border:`1px solid ${lockEnabled?'rgba(239,68,68,0.3)':'rgba(16,185,129,0.3)'}`, borderRadius:'0.5rem', color:lockEnabled?'var(--danger)':'var(--success)', cursor:'pointer', fontWeight:'700', opacity:(saving || !oldLockPassword)?0.7:1 }}>
+                <button 
+                  onClick={toggleLockActivities} 
+                  disabled={saving || !oldLockPassword} 
+                  style={{ 
+                    width: '100%', 
+                    padding: '0.875rem', 
+                    background: lockEnabled ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)', 
+                    border: `1px solid ${lockEnabled ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)'}`, 
+                    borderRadius: '0.5rem', 
+                    color: lockEnabled ? 'var(--danger)' : 'var(--success)', 
+                    cursor: 'pointer', 
+                    fontWeight: '700', 
+                    opacity: (saving || !oldLockPassword) ? 0.7 : 1 
+                  }}>
                   {saving ? 'Processing...' : `🔒 ${lockEnabled ? 'Disable' : 'Enable'} Lock Activities`}
                 </button>
-                <button onClick={() => { setShowLockModal(false); resetLockForm(); close(); navigate('/reset-lock-password'); }} style={{ marginTop:'0.75rem', width:'100%', padding:'0.75rem', background:'rgba(99,102,241,0.1)', border:'1px solid rgba(99,102,241,0.3)', borderRadius:'0.5rem', color:'var(--primary)', cursor:'pointer', fontWeight:'700' }}>
-                  ❓ Forgot lock password?
+                <button 
+                  onClick={() => { 
+                    setShowLockModal(false); 
+                    resetLockForm(); 
+                    close(); 
+                    navigate('/reset-lock-password'); 
+                  }} 
+                  style={{ 
+                    marginTop: '0.75rem', 
+                    width: '100%', 
+                    padding: '0.75rem', 
+                    background: 'rgba(99,102,241,0.1)', 
+                    border: '1px solid rgba(99,102,241,0.3)', 
+                    borderRadius: '0.5rem', 
+                    color: 'var(--primary)', 
+                    cursor: 'pointer', 
+                    fontWeight: '700',
+                    fontSize: '0.9rem'
+                  }}>
+                  🔓 Forgot lock password? Click here
                 </button>
               </div>
             )}
 
             <div style={btnRow}>
-              <button onClick={() => { setShowLockModal(false); resetLockForm(); }} style={cancelBtn}>Close</button>
+              <button 
+                onClick={() => { setShowLockModal(false); resetLockForm(); }} 
+                style={cancelBtn}>
+                Close
+              </button>
             </div>
           </div>
         </div>
       )}
 
       <style>{`
-        @keyframes slideUp { from { transform:translateY(100%); opacity:0; } to { transform:translateY(0); opacity:1; } }
-        @keyframes popUp   { from { transform:scale(0.88); opacity:0; } to { transform:scale(1); opacity:1; } }
+        @keyframes slideUp { 
+          from { transform: translateY(100%); opacity: 0; } 
+          to { transform: translateY(0); opacity: 1; } 
+        }
+        @keyframes popUp { 
+          from { transform: scale(0.88); opacity: 0; } 
+          to { transform: scale(1); opacity: 1; } 
+        }
       `}</style>
     </>
   );

@@ -19,7 +19,7 @@ const Register = () => {
     e.preventDefault();
     setError('');
     setSuccess('');
-
+    
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -31,16 +31,19 @@ const Register = () => {
     }
 
     setLoading(true);
-    const result = await register(email.trim(), password, phone.trim());
-    setLoading(false);
-
-    if (!result.success) {
-      setError(result.error);
-      return;
+    try {
+      const result = await register(email.trim(), password, phone.trim());
+      if (result.success) {
+        setSuccess('Registration successful. Redirecting to your dashboard...');
+        setTimeout(() => navigate('/agent/dashboard'), 1500);
+      } else {
+        setError(result.error);
+      }
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
-
-    setSuccess('Registration successful. Redirecting to your dashboard...');
-    navigate('/agent/dashboard');
   };
 
   return (
@@ -53,217 +56,323 @@ const Register = () => {
       padding: '2rem 1rem',
       position: 'relative',
     }}>
-      <button
+      
+      {/* Background Decoration */}
+      <div style={{
+        position: 'fixed',
+        top: 0, left: 0, right: 0, bottom: 0,
+        pointerEvents: 'none',
+        background: `
+          radial-gradient(ellipse at 20% 80%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+          radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+          radial-gradient(ellipse at 50% 50%, rgba(16, 185, 129, 0.08) 0%, transparent 70%)
+        `,
+        zIndex: 0,
+      }} />
+
+      {/* Theme Toggle - Top Right */}
+      <button 
         onClick={toggleTheme}
         style={{
           position: 'absolute',
           top: '1.5rem',
           right: '1.5rem',
-          background: 'var(--bg-secondary)',
-          border: '1px solid var(--border-color)',
-          borderRadius: '0.5rem',
-          padding: '0.5rem 1rem',
-          color: 'var(--text-primary)',
+          background: 'rgba(255,255,255,0.1)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          borderRadius: '0.75rem',
+          padding: '0.5rem 0.75rem',
+          color: 'white',
           cursor: 'pointer',
-          fontSize: '0.875rem',
-          fontWeight: '600',
+          fontSize: '1.1rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '2.5rem',
+          height: '2.5rem',
+          transition: 'background 0.2s',
+          zIndex: 10,
         }}
+        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
       >
         {theme === 'dark' ? '☀️' : '🌙'}
       </button>
 
+      {/* Register Card */}
       <div style={{
-        background: 'var(--card-bg)',
+        background: 'rgba(30, 41, 59, 0.7)',
+        backdropFilter: 'blur(20px)',
         borderRadius: '1.5rem',
-        padding: '2.5rem',
+        padding: '2.5rem 2rem',
         width: '100%',
-        maxWidth: '500px',
-        boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
-        border: '1px solid var(--border-color)',
+        maxWidth: '480px',
+        boxShadow: '0 25px 50px rgba(0,0,0,0.5)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        position: 'relative',
+        zIndex: 1,
       }}>
+        
+        {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{
-            width: '70px',
-            height: '70px',
+            width: '64px',
+            height: '64px',
             background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-            borderRadius: '1rem',
+            borderRadius: '1.25rem',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            margin: '0 auto 1rem',
-            fontSize: '2rem',
+            margin: '0 auto 1.25rem',
+            fontSize: '1.75rem',
+            boxShadow: '0 8px 20px rgba(99,102,241,0.4)',
           }}>
             📝
           </div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
-            Create Your Agent Account
+          <h1 style={{ 
+            fontSize: '1.75rem', 
+            fontWeight: '800', 
+            marginBottom: '0.5rem', 
+            color: 'white',
+            letterSpacing: '-0.02em',
+          }}>
+            Create Agent Account
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.95rem', margin: 0 }}>
             Register to start selling data bundles and managing your orders.
           </p>
         </div>
 
+        {/* Error Alert */}
         {error && (
           <div style={{
             background: 'rgba(239, 68, 68, 0.1)',
             border: '1px solid rgba(239, 68, 68, 0.3)',
-            borderRadius: '0.5rem',
-            padding: '0.875rem',
+            borderRadius: '0.75rem',
+            padding: '1rem',
             marginBottom: '1.5rem',
-            color: '#ef4444',
-            fontSize: '0.875rem',
+            color: '#fca5a5',
+            fontSize: '0.9rem',
+            lineHeight: 1.5,
           }}>
-            {error}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span>⚠️</span>
+              <span>{error}</span>
+            </div>
           </div>
         )}
 
+        {/* Success Alert */}
         {success && (
           <div style={{
-            background: 'rgba(34, 197, 94, 0.1)',
-            border: '1px solid rgba(34, 197, 94, 0.3)',
-            borderRadius: '0.5rem',
-            padding: '0.875rem',
+            background: 'rgba(16, 185, 129, 0.1)',
+            border: '1px solid rgba(16, 185, 129, 0.3)',
+            borderRadius: '0.75rem',
+            padding: '1rem',
             marginBottom: '1.5rem',
-            color: '#16a34a',
-            fontSize: '0.875rem',
+            color: '#6ee7b7',
+            fontSize: '0.9rem',
+            lineHeight: 1.5,
           }}>
-            {success}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span>✅</span>
+              <span>{success}</span>
+            </div>
           </div>
         )}
 
+        {/* Form */}
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          
+          {/* Email Field */}
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'rgba(255,255,255,0.8)', fontSize: '0.875rem' }}>
               Email Address
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="agent@example.com"
-              required
-              disabled={loading}
               style={{
                 width: '100%',
                 padding: '0.875rem 1rem',
-                border: '1px solid var(--border-color)',
-                borderRadius: '0.5rem',
-                background: 'var(--bg-secondary)',
-                color: 'var(--text-primary)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: '0.75rem',
+                background: 'rgba(15, 23, 42, 0.6)',
+                color: 'white',
                 fontSize: '1rem',
+                outline: 'none',
+                transition: 'border-color 0.2s, box-shadow 0.2s',
+                boxSizing: 'border-box',
+              }}
+              placeholder="agent@example.com"
+              required
+              disabled={loading}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = '#6366f1';
+                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.2)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+                e.currentTarget.style.boxShadow = 'none';
               }}
             />
           </div>
 
+          {/* Phone Field */}
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'rgba(255,255,255,0.8)', fontSize: '0.875rem' }}>
               Phone Number
             </label>
             <input
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="+233 (0)xxxxxxxxx"
-              required
-              disabled={loading}
               style={{
                 width: '100%',
                 padding: '0.875rem 1rem',
-                border: '1px solid var(--border-color)',
-                borderRadius: '0.5rem',
-                background: 'var(--bg-secondary)',
-                color: 'var(--text-primary)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: '0.75rem',
+                background: 'rgba(15, 23, 42, 0.6)',
+                color: 'white',
                 fontSize: '1rem',
+                outline: 'none',
+                transition: 'border-color 0.2s, box-shadow 0.2s',
+                boxSizing: 'border-box',
+              }}
+              placeholder="+233 (0)xxxxxxxxx"
+              required
+              disabled={loading}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = '#6366f1';
+                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.2)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+                e.currentTarget.style.boxShadow = 'none';
               }}
             />
           </div>
 
+          {/* Password Field */}
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'rgba(255,255,255,0.8)', fontSize: '0.875rem' }}>
               Password
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              disabled={loading}
               style={{
                 width: '100%',
                 padding: '0.875rem 1rem',
-                border: '1px solid var(--border-color)',
-                borderRadius: '0.5rem',
-                background: 'var(--bg-secondary)',
-                color: 'var(--text-primary)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: '0.75rem',
+                background: 'rgba(15, 23, 42, 0.6)',
+                color: 'white',
                 fontSize: '1rem',
+                outline: 'none',
+                transition: 'border-color 0.2s, box-shadow 0.2s',
+                boxSizing: 'border-box',
+              }}
+              placeholder="••••••••"
+              required
+              disabled={loading}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = '#6366f1';
+                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.2)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+                e.currentTarget.style.boxShadow = 'none';
               }}
             />
           </div>
 
+          {/* Confirm Password Field */}
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'rgba(255,255,255,0.8)', fontSize: '0.875rem' }}>
               Confirm Password
             </label>
             <input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              disabled={loading}
               style={{
                 width: '100%',
                 padding: '0.875rem 1rem',
-                border: '1px solid var(--border-color)',
-                borderRadius: '0.5rem',
-                background: 'var(--bg-secondary)',
-                color: 'var(--text-primary)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: '0.75rem',
+                background: 'rgba(15, 23, 42, 0.6)',
+                color: 'white',
                 fontSize: '1rem',
+                outline: 'none',
+                transition: 'border-color 0.2s, box-shadow 0.2s',
+                boxSizing: 'border-box',
+              }}
+              placeholder="••••••••"
+              required
+              disabled={loading}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = '#6366f1';
+                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.2)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+                e.currentTarget.style.boxShadow = 'none';
               }}
             />
           </div>
 
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
             style={{
               width: '100%',
-              padding: '0.875rem',
-              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+              padding: '0.95rem',
+              background: loading ? 'rgba(99,102,241,0.5)' : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
               color: 'white',
               border: 'none',
-              borderRadius: '0.5rem',
+              borderRadius: '0.75rem',
               fontSize: '1rem',
-              fontWeight: '600',
+              fontWeight: '700',
               cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.7 : 1,
+              opacity: loading ? 0.8 : 1,
+              marginTop: '0.5rem',
+              transition: 'transform 0.15s, opacity 0.15s',
+              boxShadow: '0 4px 12px rgba(99,102,241,0.3)',
             }}
+            onMouseEnter={e => { if (!loading) e.currentTarget.style.transform = 'translateY(-1px)'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
           >
             {loading ? 'Creating account...' : 'Register Account'}
           </button>
         </form>
 
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1.5rem', fontSize: '0.95rem', color: 'var(--text-secondary)' }}>
-          <p style={{ margin: 0 }}>
+        {/* Footer Link */}
+        <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.9rem' }}>
+          <p style={{ color: 'rgba(255,255,255,0.6)', marginBottom: '0' }}>
             Already have an account?{' '}
-            <Link to="/login" style={{ color: '#6366f1', textDecoration: 'none', fontWeight: '700' }}>
+            <Link to="/login" style={{ color: '#a5b4fc', textDecoration: 'none', fontWeight: '600' }}>
               Login here
             </Link>
           </p>
         </div>
 
+        {/* Bottom Branding */}
         <div style={{
           textAlign: 'center',
           marginTop: '2rem',
           paddingTop: '1.5rem',
-          borderTop: '1px solid var(--border-color)',
-          color: 'var(--text-muted)',
-          fontSize: '0.875rem',
+          borderTop: '1px solid rgba(255,255,255,0.08)',
+          color: 'rgba(255,255,255,0.4)',
+          fontSize: '0.8rem',
         }}>
-          <p>© 2026 Low-Cost Data Bundles</p>
+          <p style={{ margin: 0 }}>© 2026 Low-Cost Data Bundles</p>
           <p style={{ marginTop: '0.25rem', fontSize: '0.75rem' }}>Secure • Fast • Reliable</p>
         </div>
+
       </div>
     </div>
   );

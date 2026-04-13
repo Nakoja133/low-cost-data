@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../../api/axios';
+import MobileMenu from '../../components/MobileMenu';
 
 export default function AuditLogs() {
   const [logs, setLogs] = useState([]);
@@ -62,72 +63,86 @@ export default function AuditLogs() {
 
   const getActionColor = (action) => {
     const colors = {
-      'create': 'bg-green-100 text-green-800',
-      'update': 'bg-blue-100 text-blue-800',
-      'delete': 'bg-red-100 text-red-800',
-      'approve': 'bg-green-100 text-green-800',
-      'reject': 'bg-red-100 text-red-800',
+      'create': 'rgba(16,185,129,0.15)',
+      'update': 'rgba(59,130,246,0.15)',
+      'delete': 'rgba(239,68,68,0.15)',
+      'approve': 'rgba(16,185,129,0.15)',
+      'reject': 'rgba(239,68,68,0.15)',
     };
-    return colors[action?.toLowerCase()] || 'bg-gray-100 text-gray-800';
+    const textColor = {
+      'create': '#10b981',
+      'update': '#3b82f6',
+      'delete': '#ef4444',
+      'approve': '#10b981',
+      'reject': '#ef4444',
+    };
+    return {
+      bg: colors[action?.toLowerCase()] || 'rgba(148,163,184,0.15)',
+      color: textColor[action?.toLowerCase()] || '#94a3b8'
+    };
   };
 
   const getStatusColor = (status) => {
     return status === 'success'
-      ? 'bg-green-100 text-green-800'
-      : 'bg-red-100 text-red-800';
+      ? { bg: 'rgba(16,185,129,0.15)', color: '#10b981' }
+      : { bg: 'rgba(239,68,68,0.15)', color: '#ef4444' };
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="max-w-6xl mx-auto">
+    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
+      <MobileMenu currentPage="/admin/audit-logs" />
+
+      <main className="main-content" style={{ padding: '1.5rem', maxWidth: '1200px', margin: '0 auto' }}>
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Audit Logs</h1>
-          <p className="text-gray-600 mt-2">Track all admin actions for compliance and debugging</p>
+        <div style={{ marginBottom: '1.5rem' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: '0 0 0.25rem 0' }}>📋 Audit Logs</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', margin: 0 }}>
+            Track all admin actions for compliance and debugging
+          </p>
         </div>
 
         {/* Stats Cards */}
         {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white p-4 rounded-lg shadow">
-              <p className="text-gray-600 text-sm">Total Logs</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.total_logs}</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem', marginBottom: '1.5rem' }}>
+            <div style={{ background: 'var(--card-bg)', padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--border-color)' }}>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '0 0 0.25rem 0' }}>Total Logs</p>
+              <p style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>{stats.total_logs}</p>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <p className="text-gray-600 text-sm">Last 24h</p>
-              <p className="text-2xl font-bold text-blue-600">{stats.logs_24h}</p>
+            <div style={{ background: 'var(--card-bg)', padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--border-color)' }}>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '0 0 0.25rem 0' }}>Last 24h</p>
+              <p style={{ fontSize: '1.5rem', fontWeight: '800', color: '#3b82f6', margin: 0 }}>{stats.logs_24h}</p>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <p className="text-gray-600 text-sm">Successful</p>
-              <p className="text-2xl font-bold text-green-600">{stats.successful_actions}</p>
+            <div style={{ background: 'var(--card-bg)', padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--border-color)' }}>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '0 0 0.25rem 0' }}>Successful</p>
+              <p style={{ fontSize: '1.5rem', fontWeight: '800', color: '#10b981', margin: 0 }}>{stats.successful_actions}</p>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <p className="text-gray-600 text-sm">Failed</p>
-              <p className="text-2xl font-bold text-red-600">{stats.failed_actions}</p>
+            <div style={{ background: 'var(--card-bg)', padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--border-color)' }}>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '0 0 0.25rem 0' }}>Failed</p>
+              <p style={{ fontSize: '1.5rem', fontWeight: '800', color: '#ef4444', margin: 0 }}>{stats.failed_actions}</p>
             </div>
           </div>
         )}
 
         {/* Filters */}
-        <div className="bg-white p-6 rounded-lg shadow mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Filters</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div style={{ background: 'var(--card-bg)', padding: '1.25rem', borderRadius: '0.875rem', border: '1px solid var(--border-color)', marginBottom: '1.5rem' }}>
+          <h3 style={{ fontSize: '0.95rem', fontWeight: '700', margin: '0 0 1rem 0' }}>Filters</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
             <input
               type="text"
               placeholder="Action (e.g., create, update)"
-              className="border border-gray-300 rounded px-3 py-2 text-sm"
+              style={{ padding: '0.625rem 0.875rem', border: '1px solid var(--border-color)', borderRadius: '0.5rem', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '0.875rem' }}
               value={filters.action}
               onChange={(e) => handleFilterChange('action', e.target.value)}
             />
             <input
               type="text"
               placeholder="Entity Type (e.g., user, order)"
-              className="border border-gray-300 rounded px-3 py-2 text-sm"
+              style={{ padding: '0.625rem 0.875rem', border: '1px solid var(--border-color)', borderRadius: '0.5rem', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '0.875rem' }}
               value={filters.entity_type}
               onChange={(e) => handleFilterChange('entity_type', e.target.value)}
             />
             <select
-              className="border border-gray-300 rounded px-3 py-2 text-sm"
+              style={{ padding: '0.625rem 0.875rem', border: '1px solid var(--border-color)', borderRadius: '0.5rem', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '0.875rem' }}
               value={filters.status}
               onChange={(e) => handleFilterChange('status', e.target.value)}
             >
@@ -139,63 +154,78 @@ export default function AuditLogs() {
         </div>
 
         {/* Logs Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div style={{ background: 'var(--card-bg)', borderRadius: '0.875rem', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
           {loading ? (
-            <div className="p-8 text-center text-gray-500">Loading audit logs...</div>
+            <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+              <div className="loading-spinner" style={{ margin: '0 auto 1rem' }} />
+              Loading audit logs...
+            </div>
           ) : logs.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">No audit logs found</div>
+            <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+              No audit logs found
+            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <thead className="bg-gray-100 border-b border-gray-200">
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                      Time
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                      Admin
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                      Action
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                      Entity
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                      Description
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                      Status
-                    </th>
+                    <th style={{ textAlign: 'left', padding: '0.875rem 1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Time</th>
+                    <th style={{ textAlign: 'left', padding: '0.875rem 1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Admin</th>
+                    <th style={{ textAlign: 'left', padding: '0.875rem 1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Action</th>
+                    <th style={{ textAlign: 'left', padding: '0.875rem 1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Entity</th>
+                    <th style={{ textAlign: 'left', padding: '0.875rem 1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Description</th>
+                    <th style={{ textAlign: 'left', padding: '0.875rem 1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {logs.map((log) => (
-                    <tr key={log.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm text-gray-600">
-                        {formatDate(log.created_at)}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900 font-medium">
-                        {log.admin_id?.substring(0, 8) || 'System'}
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${getActionColor(log.action)}`}>
-                          {log.action}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
-                        {log.entity_type} {log.entity_id && `(${log.entity_id?.substring(0, 8)})`}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
-                        {log.description}
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${getStatusColor(log.status)}`}>
-                          {log.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                <tbody style={{ divideY: '1px solid var(--border-color)' }}>
+                  {logs.map((log) => {
+                    const actionColors = getActionColor(log.action);
+                    const statusColors = getStatusColor(log.status);
+                    return (
+                      <tr key={log.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.15s' }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-secondary)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = ''}
+                      >
+                        <td style={{ padding: '0.875rem 1rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                          {formatDate(log.created_at)}
+                        </td>
+                        <td style={{ padding: '0.875rem 1rem', fontSize: '0.875rem', fontWeight: '600', color: 'var(--text-primary)' }}>
+                          {log.admin_id?.substring(0, 8) || 'System'}
+                        </td>
+                        <td style={{ padding: '0.875rem 1rem' }}>
+                          <span style={{
+                            padding: '0.25rem 0.625rem',
+                            borderRadius: '0.375rem',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            background: actionColors.bg,
+                            color: actionColors.color,
+                            textTransform: 'lowercase'
+                          }}>
+                            {log.action}
+                          </span>
+                        </td>
+                        <td style={{ padding: '0.875rem 1rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                          {log.entity_type} {log.entity_id && `(${log.entity_id?.substring(0, 8)})`}
+                        </td>
+                        <td style={{ padding: '0.875rem 1rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                          {log.description}
+                        </td>
+                        <td style={{ padding: '0.875rem 1rem' }}>
+                          <span style={{
+                            padding: '0.25rem 0.625rem',
+                            borderRadius: '0.375rem',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            background: statusColors.bg,
+                            color: statusColors.color
+                          }}>
+                            {log.status}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -203,22 +233,42 @@ export default function AuditLogs() {
 
           {/* Pagination */}
           {!loading && logs.length > 0 && (
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-between items-center">
-              <span className="text-sm text-gray-600">
+            <div style={{ padding: '1rem 1.25rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
                 Showing {(page - 1) * 25 + 1} to {Math.min(page * 25, total)} of {total}
               </span>
-              <div className="flex gap-2">
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="px-3 py-2 bg-gray-200 text-gray-800 rounded disabled:opacity-50"
+                  style={{
+                    padding: '0.5rem 0.875rem',
+                    background: page === 1 ? 'var(--bg-tertiary)' : 'var(--bg-secondary)',
+                    color: page === 1 ? 'var(--text-muted)' : 'var(--text-primary)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '0.5rem',
+                    cursor: page === 1 ? 'not-allowed' : 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    opacity: page === 1 ? 0.5 : 1
+                  }}
                 >
                   Previous
                 </button>
                 <button
                   onClick={() => setPage(p => p + 1)}
                   disabled={page * 25 >= total}
-                  className="px-3 py-2 bg-gray-200 text-gray-800 rounded disabled:opacity-50"
+                  style={{
+                    padding: '0.5rem 0.875rem',
+                    background: page * 25 >= total ? 'var(--bg-tertiary)' : 'var(--bg-secondary)',
+                    color: page * 25 >= total ? 'var(--text-muted)' : 'var(--text-primary)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '0.5rem',
+                    cursor: page * 25 >= total ? 'not-allowed' : 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    opacity: page * 25 >= total ? 0.5 : 1
+                  }}
                 >
                   Next
                 </button>
@@ -226,7 +276,30 @@ export default function AuditLogs() {
             </div>
           )}
         </div>
-      </div>
+      </main>
+
+      <style>{`
+        .loading-spinner {
+          width: 32px;
+          height: 32px;
+          border: 3px solid var(--border-color);
+          border-top-color: #6366f1;
+          border-radius: 50%;
+          animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        .main-content {
+          padding-top: 1rem;
+        }
+        @media (max-width: 767px) {
+          .main-content {
+            padding-top: 0.75rem;
+            padding-bottom: 1.5rem;
+          }
+        }
+      `}</style>
     </div>
   );
 }

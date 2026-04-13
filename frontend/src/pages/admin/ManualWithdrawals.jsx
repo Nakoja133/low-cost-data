@@ -61,17 +61,27 @@ const ManualWithdrawals = () => {
   const filtered = filter === 'all' ? withdrawals : withdrawals.filter(w => w.status === filter);
 
   const badge = (status) => {
-    const map = { pending: ['rgba(245,158,11,0.15)', 'var(--warning)'], approved: ['rgba(16,185,129,0.15)', 'var(--success)'], rejected: ['rgba(239,68,68,0.15)', 'var(--danger)'] };
+    const map = {
+      pending: ['rgba(245,158,11,0.15)', '#f59e0b'],
+      approved: ['rgba(16,185,129,0.15)', '#10b981'],
+      rejected: ['rgba(239,68,68,0.15)', '#ef4444']
+    };
     return map[status] || ['var(--bg-tertiary)', 'var(--text-muted)'];
   };
 
-  if (loading) return <div className="dashboard-container"><div className="loading">Loading...</div></div>;
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--bg-primary)' }}>
+        <div className="loading-spinner" />
+      </div>
+    );
+  }
 
   return (
-    <div className="dashboard-container">
+    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
       <MobileMenu currentPage="/admin/manual-withdrawals" />
 
-      <main className="main-content" style={{ paddingTop: '1rem' }}>
+      <main className="main-content" style={{ padding: '1.5rem', maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{ marginBottom: '1.5rem' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: '700' }}>📋 Manual Withdrawals</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
@@ -87,7 +97,7 @@ const ManualWithdrawals = () => {
             return (
               <div key={s} style={{
                 padding: '1rem 1.25rem', background: 'var(--card-bg)', border: '1px solid var(--border-color)',
-                borderRadius: '0.75rem', minWidth: '140px',
+                borderRadius: '0.75rem', minWidth: '140px', flex: 1
               }}>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'capitalize', marginBottom: '0.25rem' }}>{s}</div>
                 <div style={{ fontSize: '1.4rem', fontWeight: '700' }}>{count}</div>
@@ -112,58 +122,58 @@ const ManualWithdrawals = () => {
         </div>
 
         {/* Table */}
-        <div className="card">
-          <div className="table-container">
-            <table>
+        <div className="card" style={{ background: 'var(--card-bg)', borderRadius: '1rem', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+          <div style={{ overflowX: 'auto', width: '100%' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
               <thead>
-                <tr>
-                  <th>Agent</th>
-                  <th>Amount</th>
-                  <th>MoMo Details</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                  <th>Actions</th>
+                <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+                  <th style={{ textAlign: 'left', padding: '1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Agent</th>
+                  <th style={{ textAlign: 'left', padding: '1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Amount</th>
+                  <th style={{ textAlign: 'left', padding: '1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>MoMo Details</th>
+                  <th style={{ textAlign: 'left', padding: '1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
+                  <th style={{ textAlign: 'left', padding: '1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Date</th>
+                  <th style={{ textAlign: 'right', padding: '1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan="6" style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>No withdrawals found</td></tr>
+                  <tr> <td colSpan="6" style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>No withdrawals found</td> </tr>
                 ) : filtered.map(w => {
                   const [bg, color] = badge(w.status);
                   return (
-                    <tr key={w.id}>
-                      <td>
+                    <tr key={w.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <td style={{ padding: '1rem' }}>
                         <div style={{ fontWeight: '600' }}>{w.agent_name || '—'}</div>
                         <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{w.agent_email}</div>
                       </td>
-                      <td>
+                      <td style={{ padding: '1rem' }}>
                         <span style={{ fontWeight: '700', fontSize: '1rem' }}>GH₵ {parseFloat(w.amount).toFixed(2)}</span>
                       </td>
-                      <td>
+                      <td style={{ padding: '1rem' }}>
                         <div style={{ fontWeight: '600' }}>{w.momo_number}</div>
                         <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{w.account_name}</div>
                       </td>
-                      <td>
-                        <span style={{ padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.72rem', fontWeight: '700', background: bg, color }}>
+                      <td style={{ padding: '1rem' }}>
+                        <span style={{ padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.72rem', fontWeight: '700', background: bg, color: color }}>
                           {w.status}
                         </span>
                       </td>
-                      <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                      <td style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
                         {new Date(w.created_at).toLocaleDateString()}
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{new Date(w.created_at).toLocaleTimeString()}</div>
                       </td>
-                      <td>
+                      <td style={{ padding: '1rem', textAlign: 'right' }}>
                         {w.status === 'pending' ? (
-                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                             <button onClick={() => approve(w.id)} style={{
                               padding: '0.375rem 0.875rem', border: '1px solid rgba(16,185,129,0.4)',
                               background: 'rgba(16,185,129,0.1)', borderRadius: '0.375rem',
-                              color: 'var(--success)', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '600',
+                              color: '#10b981', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '600',
                             }}>✅ Approve</button>
                             <button onClick={() => reject(w.id)} style={{
                               padding: '0.375rem 0.875rem', border: '1px solid rgba(239,68,68,0.4)',
                               background: 'rgba(239,68,68,0.1)', borderRadius: '0.375rem',
-                              color: 'var(--danger)', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '600',
+                              color: '#ef4444', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '600',
                             }}>❌ Reject</button>
                           </div>
                         ) : (
@@ -180,6 +190,11 @@ const ManualWithdrawals = () => {
           </div>
         </div>
       </main>
+      
+      <style>{`
+        .main-content { padding-top: 1rem; }
+        @media (max-width: 767px) { .main-content { padding-top: 0.75rem; padding-bottom: 1.5rem; } }
+      `}</style>
     </div>
   );
 };

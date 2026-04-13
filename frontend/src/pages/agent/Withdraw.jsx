@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
-import { useNavigate }          from 'react-router-dom';
-import { useAuth }              from '../../context/AuthContext';
-import api                      from '../../api/axios';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import api from '../../api/axios';
 import MobileMenu, { verifyLockPassword } from '../../components/MobileMenu';
 
 const CHARGE_PCT = 0.009; // 0.9%
 
 const Withdraw = () => {
-  const { user }  = useAuth();
-  const navigate  = useNavigate();
-
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
   const [walletData,    setWalletData]    = useState({ balance: 0, available: 0, pending_withdrawals: 0 });
   const [minAmount,     setMinAmount]     = useState(1);
   const [loading,       setLoading]       = useState(true);
@@ -18,18 +18,18 @@ const Withdraw = () => {
   const [submitting,    setSubmitting]    = useState(false);
   const [message,       setMessage]       = useState({ type: '', text: '' });
   const [chargeInfo,    setChargeInfo]    = useState({ charge: 0, net: 0 });
-
+  
   // Lock verification
   const [lockEnabled,   setLockEnabled]   = useState(false);
   const [lockVerified,  setLockVerified]  = useState(false);
   const [lockPassword,  setLockPassword]  = useState('');
   const [showLockModal, setShowLockModal] = useState(false);
-
+  
   // Auto fields
   const [acctNumber, setAcctNumber] = useState('');
   const [bankName,   setBankName]   = useState('MTN Mobile Money');
   const [acctName,   setAcctName]   = useState('');
-
+  
   // Manual fields
   const [manualName,  setManualName]  = useState('');
   const [manualMomo,  setManualMomo]  = useState('');
@@ -44,11 +44,14 @@ const Withdraw = () => {
         api.get('/agent/settings').catch(() => ({ data: { settings: {} } })),
         api.get('/lock-activities/status').catch(() => ({ data: { is_enabled: false } })),
       ]);
+      
       if (wRes.status === 'fulfilled') setWalletData(wRes.value.data);
       setMinAmount(parseFloat(sRes.status === 'fulfilled' ? sRes.value.data?.settings?.min_withdrawal_amount : '1') || 1);
       setLockEnabled(lRes.status === 'fulfilled' ? lRes.value.data?.is_enabled : false);
       setLockVerified(false); // Reset verification on page load
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const available = parseFloat(walletData.available || 0);
@@ -65,7 +68,7 @@ const Withdraw = () => {
     setMessage({ type: '', text: '' });
     if (requested > available) { setMessage({ type: 'error', text: `Insufficient balance. Available: GH₵ ${available.toFixed(2)}` }); return; }
     if (requested < minAmount) { setMessage({ type: 'error', text: `Minimum withdrawal is GH₵ ${minAmount.toFixed(2)}` }); return; }
-
+    
     // Check if lock is enabled and not verified
     if (lockEnabled && !lockVerified) {
       setShowLockModal(true);
@@ -113,7 +116,6 @@ const Withdraw = () => {
       setMessage({ type: 'error', text: 'Please enter your lock password' });
       return;
     }
-
     const result = await verifyLockPassword(lockPassword);
     if (result.success) {
       setLockVerified(true);
@@ -131,10 +133,14 @@ const Withdraw = () => {
   const inputStyle = { width: '100%', padding: '0.875rem 1rem', border: '1px solid var(--border-color)', borderRadius: '0.625rem', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '1rem', outline: 'none' };
   const labelStyle = { display: 'block', marginBottom: '0.4rem', fontWeight: '600', fontSize: '0.85rem', color: 'var(--text-secondary)' };
 
-  if (loading) return <div className="dashboard-container"><div className="loading">Loading...</div></div>;
+  if (loading) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)' }}>
+      <div className="loading-spinner" />
+    </div>
+  );
 
   return (
-    <div className="dashboard-container">
+    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
       <MobileMenu currentPage="/agent/withdraw" />
 
       {/* ── Charge Warning Modal ──────────────────────────────── */}
@@ -150,7 +156,7 @@ const Withdraw = () => {
                 A <strong>0.9% service charge</strong> applies to your withdrawal. The amount you receive will be slightly less than what you requested.
               </p>
               {[
-                ['Requested',      `GH₵ ${requested.toFixed(2)}`],
+                ['Requested', `GH₵ ${requested.toFixed(2)}`],
                 ['Service charge (0.9%)', `− GH₵ ${chargeInfo.charge.toFixed(2)}`],
                 ['You will receive', `GH₵ ${chargeInfo.net.toFixed(2)}`],
               ].map(([k, v], i) => (
@@ -172,7 +178,7 @@ const Withdraw = () => {
         </div>
       )}
 
-      <main className="main-content" style={{ paddingTop: '1rem', maxWidth: '560px' }}>
+      <main className="main-content" style={{ padding: '1.5rem', maxWidth: '560px', margin: '0 auto' }}>
 
         {/* Balance cards */}
         <div style={{ display: 'grid', gridTemplateColumns: walletData.pending_withdrawals > 0 ? '1fr 1fr' : '1fr', gap: '1rem', marginBottom: '1.5rem' }}>
@@ -189,7 +195,7 @@ const Withdraw = () => {
           )}
         </div>
 
-        <div className="card">
+        <div className="card" style={{ background: 'var(--card-bg)', borderRadius: '1rem', padding: '1.5rem', border: '1px solid var(--border-color)' }}>
           <h2 style={{ fontSize: '1.3rem', fontWeight: '700', marginBottom: '0.5rem' }}>💵 Withdraw Earnings</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
             Min: GH₵ {minAmount.toFixed(2)} · A 0.9% service charge applies
@@ -245,8 +251,8 @@ const Withdraw = () => {
                   <p style={{ fontWeight: '700', marginBottom: '1rem', fontSize: '0.95rem' }}>How would you like to withdraw?</p>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                     {[
-                      { key: 'auto',   icon: '⚡', label: 'Automatic', sub: 'Instant via Paystack', color: '#10b981', border: 'rgba(16,185,129,0.3)', bg: 'rgba(16,185,129,0.08)' },
-                      { key: 'manual', icon: '📋', label: 'Manual',    sub: 'Admin processes it',  color: '#6366f1', border: 'rgba(99,102,241,0.3)', bg: 'rgba(99,102,241,0.08)' },
+                      { key: 'auto', icon: '⚡', label: 'Automatic', sub: 'Instant via Paystack', color: '#10b981', border: 'rgba(16,185,129,0.3)', bg: 'rgba(16,185,129,0.08)' },
+                      { key: 'manual', icon: '📋', label: 'Manual', sub: 'Admin processes it', color: '#6366f1', border: 'rgba(99,102,241,0.3)', bg: 'rgba(99,102,241,0.08)' },
                     ].map(opt => (
                       <button key={opt.key} onClick={() => setStep(opt.key)}
                         style={{ padding: '1.5rem 1rem', background: opt.bg, border: `2px solid ${opt.border}`, borderRadius: '1rem', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s' }}
@@ -308,8 +314,8 @@ const Withdraw = () => {
                   </div>
                   {[
                     { lbl: 'Your Email *', val: manualEmail, set: setManualEmail, type: 'email', ph: 'you@example.com' },
-                    { lbl: 'Name on MoMo *', val: manualName, set: setManualName, type: 'text',  ph: 'Full name' },
-                    { lbl: 'MoMo Number *',  val: manualMomo, set: setManualMomo, type: 'tel',   ph: '0549722133' },
+                    { lbl: 'Name on MoMo *', val: manualName, set: setManualName, type: 'text', ph: 'Full name' },
+                    { lbl: 'MoMo Number *', val: manualMomo, set: setManualMomo, type: 'tel', ph: '0549722133' },
                   ].map(f => (
                     <div key={f.lbl}>
                       <label style={labelStyle}>{f.lbl}</label>
@@ -331,7 +337,7 @@ const Withdraw = () => {
                   <div style={{ fontSize: '2.5rem', marginBottom: '0.875rem' }}>⚠️</div>
                   <h3 style={{ fontWeight: '700', color: 'var(--danger)', marginBottom: '0.5rem' }}>Withdrawal Failed</h3>
                   <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: '1.6' }}>
-                    Automatic transfer failed. Please use Manual Withdrawal or try again later.<br />
+                    Automatic transfer failed. Please use Manual Withdrawal or try again later. <br />
                     <strong>Only MoMo accepted for manual withdrawal.</strong>
                   </p>
                   <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
@@ -368,6 +374,7 @@ const Withdraw = () => {
                   className="input"
                   placeholder="Enter your lock password"
                   autoFocus
+                  style={inputStyle}
                 />
               </div>
               {message.type === 'error' && (
@@ -391,6 +398,10 @@ const Withdraw = () => {
       <style>{`
         @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
         @keyframes popIn  { from{opacity:0;transform:scale(0.85)} to{opacity:1;transform:scale(1)} }
+        .main-content { padding-top: 1rem; }
+        @media (max-width: 767px) { .main-content { padding-top: 0.75rem; padding-bottom: 1.5rem; } }
+        .loading-spinner { width: 32px; height: 32px; border: 3px solid var(--border-color); border-top-color: #6366f1; border-radius: 50%; animation: spin 0.7s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
     </div>
   );

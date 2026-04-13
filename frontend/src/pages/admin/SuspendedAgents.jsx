@@ -66,67 +66,109 @@ const SuspendedAgents = () => {
 
   const fmtDate = (value) => value ? new Date(value).toLocaleString() : '—';
 
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)' }}>
+        <div className="loading-spinner" />
+      </div>
+    );
+  }
+
   return (
-    <div className="dashboard-container">
+    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
       <MobileMenu currentPage="/admin/suspended-agents" />
-      <main className="main-content" style={{ paddingTop: '1rem' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'1.5rem', flexWrap:'wrap', gap:'1rem' }}>
+
+      <main className="main-content" style={{ padding: '1.5rem', maxWidth: '1200px', margin: '0 auto' }}>
+        
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <h2 style={{ fontSize:'1.5rem', fontWeight:'800' }}>🚫 Suspended Agents</h2>
-            <p style={{ color:'var(--text-secondary)', fontSize:'0.95rem', margin:'0.5rem 0 0' }}>
-              Agents suspended for inactivity are listed here. Reactivate them when they are cleared.
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0 }}>🚫 Suspended Agents</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', margin: '0.25rem 0 0' }}>
+              Agents suspended for inactivity are listed here. Reactivate them when cleared.
             </p>
           </div>
         </div>
 
+        {/* Message Alert */}
         {message.text && (
-          <div style={{ padding:'1rem', borderRadius:'0.75rem', marginBottom:'1.25rem', background:message.type==='success' ? 'rgba(16,185,129,0.1)' : 'rgba(248,113,113,0.1)', border:`1px solid ${message.type==='success' ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.25)'}`, color:message.type==='success' ? 'var(--success)' : 'var(--danger)', fontWeight:'700' }}>
+          <div style={{
+            padding: '1rem',
+            borderRadius: '0.75rem',
+            marginBottom: '1.25rem',
+            background: message.type === 'success' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+            border: `1px solid ${message.type === 'success' ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+            color: message.type === 'success' ? 'var(--success)' : 'var(--danger)',
+            fontWeight: '700'
+          }}>
             {message.text}
           </div>
         )}
 
-        {loading ? (
-          <div className="loading">Loading suspended agents...</div>
-        ) : agents.length === 0 ? (
-          <div style={{ padding:'1.5rem', borderRadius:'1rem', background:'var(--bg-secondary)', border:'1px solid var(--border-color)', color:'var(--text-secondary)' }}>
-            No suspended agents found.
+        {/* Content */}
+        {agents.length === 0 ? (
+          <div style={{
+            padding: '3rem 1.5rem',
+            borderRadius: '1rem',
+            background: 'var(--card-bg)',
+            border: '1px solid var(--border-color)',
+            color: 'var(--text-secondary)',
+            textAlign: 'center'
+          }}>
+            <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>🎉 No suspended agents found</p>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>All your agents are active and performing well.</p>
           </div>
         ) : (
-          <div style={{ overflowX:'auto' }}>
-            <table style={{ width:'100%', borderCollapse:'collapse', minWidth:'930px' }}>
+          <div style={{ overflowX: 'auto', background: 'var(--card-bg)', borderRadius: '1rem', border: '1px solid var(--border-color)' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1000px' }}>
               <thead>
-                <tr style={{ textAlign:'left', color:'var(--text-secondary)', borderBottom:'1px solid var(--border-color)' }}>
-                  <th style={{ padding:'0.9rem 0.75rem' }}>Agent</th>
-                  <th style={{ padding:'0.9rem 0.75rem' }}>Email</th>
-                  <th style={{ padding:'0.9rem 0.75rem' }}>Store</th>
-                  <th style={{ padding:'0.9rem 0.75rem' }}>Phone</th>
-                  <th style={{ padding:'0.9rem 0.75rem' }}>Last Order</th>
-                  <th style={{ padding:'0.9rem 0.75rem' }}>Last Withdrawal</th>
-                  <th style={{ padding:'0.9rem 0.75rem' }}>Suspended At</th>
-                  <th style={{ padding:'0.9rem 0.75rem' }}>Orders</th>
-                  <th style={{ padding:'0.9rem 0.75rem' }}>Withdrawals</th>
-                  <th style={{ padding:'0.9rem 0.75rem' }}>Action</th>
+                <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+                  {['Agent', 'Email', 'Store', 'Phone', 'Last Order', 'Last Withdrawal', 'Suspended At', 'Orders', 'Withdrawals', 'Actions'].map((header) => (
+                    <th key={header} style={{ textAlign: 'left', padding: '1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      {header}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {agents.map((agent) => (
-                  <tr key={agent.id} style={{ borderBottom:'1px solid var(--border-color)' }}>
-                    <td style={{ padding:'0.9rem 0.75rem', fontWeight:'700' }}>{agent.username || '—'}</td>
-                    <td style={{ padding:'0.9rem 0.75rem' }}>{agent.email}</td>
-                    <td style={{ padding:'0.9rem 0.75rem' }}>{agent.store_name || '—'}</td>
-                    <td style={{ padding:'0.9rem 0.75rem' }}>{agent.phone || '—'}</td>
-                    <td style={{ padding:'0.9rem 0.75rem' }}>{fmtDate(agent.last_order_at)}</td>
-                    <td style={{ padding:'0.9rem 0.75rem' }}>{fmtDate(agent.last_withdrawal_at)}</td>
-                    <td style={{ padding:'0.9rem 0.75rem' }}>{fmtDate(agent.suspended_at)}</td>
-                    <td style={{ padding:'0.9rem 0.75rem' }}>{agent.total_orders}</td>
-                    <td style={{ padding:'0.9rem 0.75rem' }}>{agent.total_withdrawals}</td>
-                    <td style={{ padding:'0.9rem 0.75rem', display:'flex', gap:'0.5rem', flexWrap:'wrap' }}>
-                      <button onClick={() => reactivateAgent(agent)} style={{ padding:'0.55rem 0.9rem', background:'linear-gradient(135deg,#16a34a,#22c55e)', border:'none', borderRadius:'0.55rem', color:'white', cursor:'pointer', fontWeight:'700' }}>
-                        Reactivate
-                      </button>
-                      <button onClick={() => deleteAgent(agent)} style={{ padding:'0.55rem 0.9rem', background:'rgba(239,68,68,0.15)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:'0.55rem', color:'#b91c1c', cursor:'pointer', fontWeight:'700' }}>
-                        Delete
-                      </button>
+                  <tr key={agent.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.15s' }}>
+                    <td style={{ padding: '1rem', fontWeight: '600', color: 'var(--text-primary)' }}>{agent.username || '—'}</td>
+                    <td style={{ padding: '1rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{agent.email}</td>
+                    <td style={{ padding: '1rem', fontSize: '0.875rem', color: 'var(--text-primary)' }}>{agent.store_name || '—'}</td>
+                    <td style={{ padding: '1rem', fontSize: '0.875rem', color: 'var(--text-primary)' }}>{agent.phone || '—'}</td>
+                    <td style={{ padding: '1rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{fmtDate(agent.last_order_at)}</td>
+                    <td style={{ padding: '1rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{fmtDate(agent.last_withdrawal_at)}</td>
+                    <td style={{ padding: '1rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{fmtDate(agent.suspended_at)}</td>
+                    <td style={{ padding: '1rem', fontWeight: '600', color: 'var(--text-primary)' }}>{agent.total_orders}</td>
+                    <td style={{ padding: '1rem', fontWeight: '600', color: 'var(--text-primary)' }}>{agent.total_withdrawals}</td>
+                    <td style={{ padding: '1rem', textAlign: 'right' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                        <button onClick={() => reactivateAgent(agent)} style={{
+                          padding: '0.5rem 0.875rem',
+                          background: 'linear-gradient(135deg,#16a34a,#22c55e)',
+                          border: 'none',
+                          borderRadius: '0.5rem',
+                          color: 'white',
+                          cursor: 'pointer',
+                          fontWeight: '700',
+                          fontSize: '0.8rem'
+                        }}>
+                          ✅ Reactivate
+                        </button>
+                        <button onClick={() => deleteAgent(agent)} style={{
+                          padding: '0.5rem 0.875rem',
+                          background: 'rgba(239,68,68,0.1)',
+                          border: '1px solid rgba(239,68,68,0.3)',
+                          borderRadius: '0.5rem',
+                          color: '#ef4444',
+                          cursor: 'pointer',
+                          fontWeight: '700',
+                          fontSize: '0.8rem'
+                        }}>
+                          🗑️ Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -135,6 +177,13 @@ const SuspendedAgents = () => {
           </div>
         )}
       </main>
+
+      <style>{`
+        .main-content { padding-top: 1rem; }
+        @media (max-width: 767px) { .main-content { padding-top: 0.75rem; padding-bottom: 1.5rem; } }
+        .loading-spinner { width: 32px; height: 32px; border: 3px solid var(--border-color); border-top-color: #6366f1; border-radius: 50%; animation: spin 0.7s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 };
