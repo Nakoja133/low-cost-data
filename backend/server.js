@@ -31,6 +31,16 @@ app.use('/api/packages',     packageRoutes);
 app.use('/api/withdrawals',  withdrawalRoutes);
 app.use('/api/lock-activities', lockActivitiesRoutes);
 
+app.get('/api/myip', async (req, res) => {
+  try {
+    const axios = require('axios');
+    const r = await axios.get('https://api.ipify.org?format=json');
+    res.json(r.data);
+  } catch (e) {
+    res.json({ error: e.message });
+  }
+});
+
 app.get('/api/health', (_, res) => res.json({ status: 'OK' }));
 app.get('/', (_, res) => res.json({ message: 'Low-Cost Data Bundles API v1.0.0' }));
 
