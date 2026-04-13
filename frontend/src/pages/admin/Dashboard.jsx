@@ -67,14 +67,14 @@ const AdminDashboard = () => {
     return `Good night, ${n} 🌙`;
   };
 
+  // ✅ FIXED: Organized layout - Label top, Value bottom-left, Sub bottom-right
   const StatCard = ({ label, value, color, sub }) => (
-    <div style={{ background:'var(--card-bg)', padding:'1.25rem', borderRadius:'1rem', border:'1px solid var(--border-color)', borderLeft:`4px solid ${color}`, transition:'transform 0.2s,box-shadow 0.2s', cursor:'default' }}
-      onMouseEnter={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow=`0 6px 20px ${color}25`; }}
-      onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='none'; }}
-    >
-      <div style={{ fontSize:'0.8rem', color:'var(--text-secondary)', marginBottom:'0.4rem' }}>{label}</div>
-      <div style={{ fontSize:'1.65rem', fontWeight:'800', color }}>{value}</div>
-      {sub && <div style={{ fontSize:'0.72rem', color:'var(--text-muted)', marginTop:'0.2rem' }}>{sub}</div>}
+    <div style={{ background:'var(--card-bg)', padding:'1.25rem', borderRadius:'1rem', border:'1px solid var(--border-color)', borderLeft:`4px solid ${color}`, display:'flex', flexDirection:'column', minHeight:'120px', justifyContent:'space-between' }}>
+      <div style={{ fontSize:'0.8rem', color:'var(--text-secondary)', marginBottom:'0.75rem', fontWeight:'600' }}>{label}</div>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginTop:'auto' }}>
+        <div style={{ fontSize:'1.65rem', fontWeight:'800', color }}>{value}</div>
+        {sub && <div style={{ fontSize:'0.7rem', color:'var(--text-muted)', textAlign:'right', marginLeft:'0.5rem', lineHeight:'1.3' }}>{sub}</div>}
+      </div>
     </div>
   );
 
@@ -167,7 +167,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Stats */}
+        {/* Stats - Organized Layout */}
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:'1rem', marginBottom:'1.25rem' }}>
           <StatCard label="Total Sales"      value={`GH₵ ${stats.totalSales.toFixed(2)}`}   color="#3b82f6" />
           <StatCard label="Platform Profit"  value={`GH₵ ${stats.adminProfit.toFixed(2)}`}  color="#10b981" sub={`Margin ${stats.platformMargin}% | Paid out GH₵ ${stats.totalPayouts.toFixed(2)}`} />
@@ -177,7 +177,7 @@ const AdminDashboard = () => {
           <StatCard label="Manual Requests"  value={stats.pendingManual}                      color="#f97316" sub="pending action" />
         </div>
 
-        {/* ✅ Quick Actions — Profile, Terms, Auto Withdrawals moved to mobile menu. Check Holding added. */}
+        {/* Quick Actions */}
         <div className="card" style={{ marginBottom:'1.25rem' }}>
           <h2 style={{ fontSize:'1rem', fontWeight:'700', marginBottom:'1rem' }}>⚡ Quick Actions</h2>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(130px,1fr))', gap:'0.75rem' }}>
@@ -185,7 +185,6 @@ const AdminDashboard = () => {
             <QuickBtn icon="📋" label="Manual Withdrawals" sub="Process MoMo requests" color="#f97316" onClick={() => navigate('/admin/manual-withdrawals')} />
             <QuickBtn icon="📦" label="Packages"           sub="Data bundle prices"    color="#f59e0b" onClick={() => navigate('/admin/packages')} />
             <QuickBtn icon="📊" label="Orders"             sub="All transactions"      color="#3b82f6" onClick={() => navigate('/admin/orders')} />
-            {/* ✅ NEW: Check Holding */}
             <QuickBtn icon="🏦" label="Check Holding"      sub="Platform profit balances" color="#10b981" onClick={openHolding} />
           </div>
         </div>
