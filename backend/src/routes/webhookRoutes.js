@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const axios = require('axios');
+const https = require('https'); // ✅ SSL fix
 const pool = require('../config/database');
 
 // ============================================
@@ -54,6 +55,7 @@ const callXrayghAPI = async (order) => {
         Accept: 'application/json',
       },
       timeout: 30000,
+      httpsAgent: new https.Agent({ rejectUnauthorized: false }), // ✅ SSL fix
     }
   );
 
@@ -79,7 +81,6 @@ const callXrayghAPI = async (order) => {
 router.post('/paystack', async (req, res) => {
   console.log('🔔 Webhook received:', req.body?.event);
 
-  // ✅ FIX: Signature validation re-enabled (was commented out)
   if (!verifyPaystackSignature(req)) {
     console.error('❌ Invalid Paystack webhook signature');
     return res.status(400).json({ error: 'Invalid signature' });
@@ -126,7 +127,7 @@ router.post('/paystack', async (req, res) => {
       [reference]
     );
 
-    // 3. ✅ FIX: Call XRAYGH to actually deliver data to the customer
+    // 3. Call XRAYGH to deliver data to the customer
     let xrayghResponse;
     try {
       xrayghResponse = await callXrayghAPI(order);
@@ -162,7 +163,7 @@ router.post('/paystack', async (req, res) => {
 
     // 5. Credit agent wallet with their profit
     if (order.agent_id) {
-      const basePrice = parseFloat(order.base_price);
+      const basePrice  = parseFloat(order.base_price);
       const amountPaid = parseFloat(order.amount_paid);
 
       // Agent profit = what they charged customer - what admin charges them
@@ -200,7 +201,7 @@ router.post('/paystack', async (req, res) => {
             [walletId]
           );
           const balanceBefore = parseFloat(balanceResult.rows[0].balance);
-          const balanceAfter = balanceBefore + agentProfit;
+          const balanceAfter  = balanceBefore + agentProfit;
 
           await pool.query(
             `INSERT INTO transactions (wallet_id, type, amount, balance_after, description, reference)
@@ -230,7 +231,6 @@ router.post('/paystack', async (req, res) => {
 
   } catch (err) {
     console.error('❌ Webhook error:', err.message);
-    // Fail the order so admin can investigate
     await pool.query(
       "UPDATE orders SET status = 'failed', updated_at = NOW() WHERE reference = $1",
       [reference]
