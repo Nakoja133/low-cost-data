@@ -13,6 +13,9 @@ const WithdrawalHistory = () => {
   const [loading,    setLoading]    = useState(true);
   const [filter,     setFilter]     = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  
+  // ✅ State for the Reason Modal
+  const [reasonModal, setReasonModal] = useState({ show: false, text: '' });
 
   useEffect(() => { fetchHistory(); }, []);
 
@@ -20,16 +23,16 @@ const WithdrawalHistory = () => {
     try {
       const r = await api.get('/agent/withdrawal-history');
       setHistory(r.data.data || []);
-    } catch (err) { 
-      console.error(err); 
-    } finally { 
-      setLoading(false); 
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const filtered = history.filter(w => {
-    if (filter !== 'all' && w.status !== filter) return false;
-    if (typeFilter !== 'all' && w.type !== typeFilter) return false;
+    if (filter !== 'all' && w.status !== filter)         return false;
+    if (typeFilter !== 'all' && w.type !== typeFilter)   return false;
     return true;
   });
 
@@ -39,17 +42,54 @@ const WithdrawalHistory = () => {
     return acc;
   }, { totalReceived: 0, totalPending: 0 });
 
-  if (loading) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)' }}>
-        <div className="loading-spinner" />
-      </div>
-    );
-  }
+  // ── Modal Styles ────────────────────────────────────────────
+  const overlayStyle = {
+    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 2000,
+    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
+  };
+  const modalCard = {
+    background: 'var(--card-bg)', borderRadius: '1.25rem', maxWidth: '400px', width: '100%',
+    padding: '1.5rem', border: '1px solid var(--border-color)', boxShadow: '0 25px 60px rgba(0,0,0,0.5)',
+    animation: 'popIn 0.25s cubic-bezier(0.34,1.56,0.64,1)'
+  };
+
+  if (loading) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)' }}>
+      <div className="loading-spinner" />
+    </div>
+  );
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
       <MobileMenu currentPage="/agent/withdrawal-history" />
+
+      {/* ── Reason Modal ──────────────────────────────────── */}
+      {reasonModal.show && (
+        <div style={overlayStyle} onClick={() => setReasonModal({ show: false, text: '' })}>
+          <div style={modalCard} onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem', textAlign: 'center' }}>⚠️</div>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '0.75rem', textAlign: 'center' }}>
+              Reason for the rejection
+            </h3>
+            <div style={{ 
+              padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '0.75rem', 
+              marginBottom: '1.5rem', fontSize: '0.95rem', lineHeight: '1.6', textAlign: 'center',
+              border: '1px solid var(--border-color)'
+            }}>
+              {reasonModal.text || 'No reason provided.'}
+            </div>
+            <button 
+              onClick={() => setReasonModal({ show: false, text: '' })}
+              style={{ 
+                width: '100%', padding: '0.75rem', background: 'var(--primary)', color: 'white', 
+                border: 'none', borderRadius: '0.625rem', fontWeight: '700', cursor: 'pointer' 
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       <main className="main-content" style={{ padding: '1.5rem', maxWidth: '1200px', margin: '0 auto' }}>
 
@@ -127,7 +167,7 @@ const WithdrawalHistory = () => {
         {/* Table */}
         <div className="card" style={{ background: 'var(--card-bg)', borderRadius: '1rem', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
           <div style={{ overflowX: 'auto', width: '100%' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '900px' }}>
               <thead>
                 <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
                   <th style={{ textAlign: 'left', padding: '1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>ID</th>
@@ -135,13 +175,14 @@ const WithdrawalHistory = () => {
                   <th style={{ textAlign: 'left', padding: '1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Amount Received</th>
                   <th style={{ textAlign: 'left', padding: '1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Type</th>
                   <th style={{ textAlign: 'left', padding: '1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
+                  <th style={{ textAlign: 'left', padding: '1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Reason</th>
                   <th style={{ textAlign: 'left', padding: '1rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Date</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan="6" style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>No withdrawals found</td>
+                    <td colSpan="7" style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>No withdrawals found</td>
                   </tr>
                 ) : filtered.map((w, i) => {
                   const sc = STATUS_COLORS[w.status] || STATUS_COLORS.pending;
@@ -188,6 +229,27 @@ const WithdrawalHistory = () => {
                           {w.status}
                         </span>
                       </td>
+                      {/* ✅ REASON COLUMN */}
+                      <td style={{ padding: '1rem' }}>
+                        {w.status === 'rejected' ? (
+                          <button
+                            onClick={() => setReasonModal({ show: true, text: w.rejection_reason })}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: 'var(--primary)',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              fontSize: '0.85rem',
+                              textDecoration: 'underline'
+                            }}
+                          >
+                            View Reason
+                          </button>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)' }}>—</span>
+                        )}
+                      </td>
                       <td style={{ padding: '1rem', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
                         <div>{new Date(w.created_at).toLocaleDateString()}</div>
                         <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>{new Date(w.created_at).toLocaleTimeString()}</div>
@@ -202,6 +264,7 @@ const WithdrawalHistory = () => {
       </main>
 
       <style>{`
+        @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         .main-content { padding-top: 1rem; }
         @media (max-width: 767px) { .main-content { padding-top: 0.75rem; padding-bottom: 1.5rem; } }
         .loading-spinner { width: 32px; height: 32px; border: 3px solid var(--border-color); border-top-color: #6366f1; border-radius: 50%; animation: spin 0.7s linear infinite; }

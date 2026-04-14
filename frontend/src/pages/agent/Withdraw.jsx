@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import api from '../../api/axios';
+import { useNavigate }          from 'react-router-dom';
+import { useAuth }              from '../../context/AuthContext';
+import api                      from '../../api/axios';
 import MobileMenu, { verifyLockPassword } from '../../components/MobileMenu';
 
 const CHARGE_PCT = 0.009; // 0.9%
 
 const Withdraw = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
+  const { user }  = useAuth();
+  const navigate  = useNavigate();
   
   const [walletData,    setWalletData]    = useState({ balance: 0, available: 0, pending_withdrawals: 0 });
   const [minAmount,     setMinAmount]     = useState(1);
@@ -39,16 +39,13 @@ const Withdraw = () => {
 
   const fetchData = async () => {
     try {
-      const [wRes, sRes, lRes] = await Promise.allSettled([
+      const [wRes, sRes] = await Promise.allSettled([
         api.get('/agent/wallet'),
         api.get('/agent/settings').catch(() => ({ data: { settings: {} } })),
-        api.get('/lock-activities/status').catch(() => ({ data: { is_enabled: false } })),
       ]);
       
       if (wRes.status === 'fulfilled') setWalletData(wRes.value.data);
       setMinAmount(parseFloat(sRes.status === 'fulfilled' ? sRes.value.data?.settings?.min_withdrawal_amount : '1') || 1);
-      setLockEnabled(lRes.status === 'fulfilled' ? lRes.value.data?.is_enabled : false);
-      setLockVerified(false); // Reset verification on page load
     } finally {
       setLoading(false);
     }

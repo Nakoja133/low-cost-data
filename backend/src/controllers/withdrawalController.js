@@ -1,12 +1,12 @@
 const pool = require('../config/database');
 
-// REQUEST WITHDRAWAL (Agent initiates)
+// ── REQUEST WITHDRAWAL (Agent initiates) ──────────────────────
 exports.requestWithdrawal = async (req, res) => {
   const { amount, account_number, bank_name, account_name } = req.body;
-  const agent_id = req.user.id; // From authenticated user
+  const agent_id = req.user.id; 
 
   try {
-    // 1. Validate minimum withdrawal (GH₵ 10)
+    // 1. Validate minimum withdrawal
     if (amount < 1) {
       return res.status(400).json({ error: 'Minimum withdrawal is GH₵ 1' });
     }
@@ -41,7 +41,7 @@ exports.requestWithdrawal = async (req, res) => {
 
     // 4. Create withdrawal record (status: pending)
     const withdrawalRef = `WD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    
+
     const newWithdrawal = await pool.query(
       `INSERT INTO withdrawals 
        (agent_id, wallet_id, amount, account_number, bank_name, account_name, reference, status) 
@@ -54,26 +54,21 @@ exports.requestWithdrawal = async (req, res) => {
       withdrawal: newWithdrawal.rows[0],
       auto_processed: false,
     });
-
   } catch (err) {
     console.error('Withdrawal request error:', err.message);
     res.status(500).json({ error: 'Server error' });
   }
 };
 
-// GET WITHDRAWAL HISTORY (For Agent Dashboard)
+// ── GET WITHDRAWAL HISTORY (For Agent Dashboard) ──────────────
 exports.getWithdrawals = async (req, res) => {
   const agent_id = req.user.id;
-
   try {
+    // SELECT * ensures rejection_reason is included if it exists in the DB
     const withdrawals = await pool.query(
-      `SELECT * FROM withdrawals 
-       WHERE agent_id = $1 
-       ORDER BY created_at DESC 
-       LIMIT 50`,
+      `SELECT * FROM withdrawals WHERE agent_id = $1 ORDER BY created_at DESC LIMIT 50`,
       [agent_id]
     );
-
     res.json({ data: withdrawals.rows });
   } catch (err) {
     console.error(err);

@@ -10,7 +10,7 @@ exports.getLockActivitiesStatus = async (req, res) => {
       'SELECT is_enabled, lock_password_hash FROM lock_activities WHERE user_id = $1',
       [user_id]
     );
-    
+
     if (result.rows.length === 0) {
       // First time - create record with disabled status
       await pool.query(
@@ -41,14 +41,13 @@ exports.setLockPassword = async (req, res) => {
   // Trim to prevent invisible-whitespace mismatches
   const trimmedLockPassword = (lockPassword || '').trim();
   const trimmedConfirmPassword = (confirmPassword || '').trim();
-  
+
   try {
     // 1. Verify account password
     const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [user_id]);
     if (userResult.rows.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
     const user = userResult.rows[0];
     const passwordMatch = await bcrypt.compare(accountPassword, user.password_hash);
     if (!passwordMatch) {
@@ -88,14 +87,13 @@ exports.changeLockPassword = async (req, res) => {
   const user_id = req.user.id;
   const trimmedNew = (newPassword || '').trim();
   const trimmedConfirm = (confirmPassword || '').trim();
-  
+
   try {
     // 1. Get current lock password hash
     const result = await pool.query(
       'SELECT lock_password_hash FROM lock_activities WHERE user_id = $1',
       [user_id]
     );
-    
     if (result.rows.length === 0 || !result.rows[0].lock_password_hash) {
       return res.status(400).json({ error: 'Lock password not set' });
     }
@@ -136,14 +134,13 @@ exports.changeLockPassword = async (req, res) => {
 exports.toggleLockActivities = async (req, res) => {
   const { lockPassword, enabled } = req.body;
   const user_id = req.user.id;
-  
+
   try {
     // 1. Get lock activities record
     const result = await pool.query(
       'SELECT * FROM lock_activities WHERE user_id = $1',
       [user_id]
     );
-    
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Lock activities not initialized' });
     }
@@ -189,13 +186,12 @@ exports.toggleLockActivities = async (req, res) => {
 exports.verifyLockPassword = async (req, res) => {
   const { lockPassword } = req.body;
   const user_id = req.user.id;
-  
+
   try {
     const result = await pool.query(
       'SELECT lock_password_hash FROM lock_activities WHERE user_id = $1',
       [user_id]
     );
-    
     if (result.rows.length === 0 || !result.rows[0].lock_password_hash) {
       return res.status(400).json({ error: 'Lock password not set' });
     }
@@ -228,11 +224,10 @@ exports.verifyLockPassword = async (req, res) => {
 // ── FORGOT LOCK PASSWORD ────────────────────────────────────
 exports.forgotLockPassword = async (req, res) => {
   const { email } = req.body;
-  
   if (!email || !email.trim()) {
     return res.status(400).json({ error: 'Email address is required' });
   }
-  
+
   try {
     // 1. Find user by email
     const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email.trim().toLowerCase()]);
@@ -240,7 +235,6 @@ exports.forgotLockPassword = async (req, res) => {
       // Return a generic message to prevent user enumeration
       return res.json({ message: 'If that email exists, a reset link has been sent' });
     }
-    
     const user = userResult.rows[0];
 
     // 2. Confirm lock_activities record exists and a password has been set
@@ -261,9 +255,9 @@ exports.forgotLockPassword = async (req, res) => {
       [user.id]
     );
 
-    // 4. Create new reset token (1 hour expiry)
+    // 4. Create new reset token (15 minutes expiry)
     const resetToken = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 3600000);
+    const expiresAt = new Date(Date.now() + 900000); // ✅ 15 minutes
 
     await pool.query(
       `INSERT INTO password_resets (user_id, reset_type, token, expires_at)
@@ -279,7 +273,7 @@ exports.forgotLockPassword = async (req, res) => {
       req.get('origin') ||
       `${req.protocol}://${req.get('host')}`
     ).replace(/\/$/, '');
-    
+
     const resetLink = `${frontendUrl}/reset-lock-password?token=${resetToken}`;
 
     const helpCenterEmailResult = await pool.query(
@@ -293,21 +287,20 @@ exports.forgotLockPassword = async (req, res) => {
       html: `
         <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:2rem;background:#f3f4f6;border-radius:12px;">
           <h2 style="color:#1e293b;margin-top:0;">Reset Lock Activities Password</h2>
-          <p style="color:#475569;">Click the button below to reset your lock activities password. This link expires in <strong>1 hour</strong>.</p>
+          <p style="color:#475569;">Click the button below to reset your lock activities password. This link expires in <strong>15 minutes</strong>.</p>
           <a href="${resetLink}"
-            style="display:inline-block;padding:0.75rem 1.5rem;background:#f97316;color:#fff;text-decoration:none;border-radius:0.5rem;font-weight:600;margin:0.5rem 0;">
-            Reset Lock Password
+           style="display:inline-block;padding:0.75rem 1.5rem;background:#f97316;color:#fff;text-decoration:none;border-radius:0.5rem;font-weight:600;margin:0.5rem 0;">
+           Reset Lock Password
           </a>
           <p style="color:#64748b;font-size:0.85rem;margin-top:1.5rem;">
-            If the button above doesn't work, copy and paste this link into your browser:<br/>
-            <a href="${resetLink}" style="color:#2563eb;word-break:break-all;">${resetLink}</a>
+           If the button above doesn't work, copy and paste this link into your browser: <br/>
+           <a href="${resetLink}" style="color:#2563eb;word-break:break-all;">${resetLink}</a>
           </p>
-          ${
-            helpCenterEmail
-              ? `<p style="color:#334155;font-size:0.875rem;">
-                   Need help? Email <a href="mailto:${helpCenterEmail}" style="color:#2563eb;">${helpCenterEmail}</a>
-                 </p>`
-              : ''
+          ${helpCenterEmail
+            ? `<p style="color:#334155;font-size:0.875rem;">
+               Need help? Email <a href="mailto:${helpCenterEmail}" style="color:#2563eb;">${helpCenterEmail}</a>
+              </p>`
+            : ''
           }
           <p style="color:#94a3b8;font-size:0.8rem;margin-top:1rem;">If you didn't request this, you can safely ignore this email.</p>
         </div>
@@ -324,23 +317,21 @@ exports.forgotLockPassword = async (req, res) => {
 // ── RESET LOCK PASSWORD ─────────────────────────────────────
 exports.resetLockPassword = async (req, res) => {
   const { token, newPassword } = req.body;
-  
   // Validate inputs up-front
   if (!token || !newPassword) {
     return res.status(400).json({ error: 'Token and new password are required' });
   }
-  
   const trimmedPassword = newPassword.trim();
   if (trimmedPassword.length < 4) {
     return res.status(400).json({ error: 'New password must be at least 4 characters' });
   }
-  
+
   try {
     const resetResult = await pool.query(
       `SELECT * FROM password_resets WHERE token = $1 AND reset_type = 'lock_activities' AND is_used = false AND expires_at > NOW()`,
       [token]
     );
-    
+
     if (resetResult.rows.length === 0) {
       return res.status(400).json({ error: 'Invalid or expired reset link' });
     }

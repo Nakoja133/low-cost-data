@@ -8,7 +8,7 @@ const ResetLockPassword = () => {
   const token = searchParams.get('token');
 
   // Step 1: Email Request, 1.5: Success/Check Email, 2: Reset Form
-  const [step, setStep] = useState(token ? 2 : 1); 
+  const [step, setStep] = useState(token ? 2 : 1);
   const [email, setEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -47,7 +47,6 @@ const ResetLockPassword = () => {
       showMsg('error', 'Passwords do not match');
       return;
     }
-
     if (newPassword.length < 4) {
       showMsg('error', 'Password must be at least 4 characters');
       return;
@@ -67,7 +66,7 @@ const ResetLockPassword = () => {
   // ── Styles ─────────────────────────────────────────────────
   const containerStyle = {
     minHeight: '100vh',
-    background: 'var(--bg-primary, #0f172a)', // Dark background fallback
+    background: 'var(--bg-primary, #0f172a)',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -86,7 +85,7 @@ const ResetLockPassword = () => {
 
   // Orange Header Card
   const headerCardStyle = {
-    background: 'linear-gradient(135deg, #f59e0b, #d97706)', // Orange gradient
+    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
     borderRadius: '1.5rem',
     padding: '2.5rem 1.5rem',
     color: 'white',
@@ -148,7 +147,7 @@ const ResetLockPassword = () => {
   const btnStyle = {
     width: '100%',
     padding: '0.875rem 1rem',
-    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', // Indigo/Purple button
+    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
     color: 'white',
     border: 'none',
     borderRadius: '0.75rem',
@@ -239,8 +238,9 @@ const ResetLockPassword = () => {
               <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: 1.5 }}>
                 We've sent a reset link to <strong style={{ color: 'var(--text-primary)' }}>{email}</strong>
               </p>
+              {/* ✅ UPDATED TEXT: 15 minutes */}
               <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '2rem' }}>
-                The link expires in 1 hour. Check your spam folder if you don't see it.
+                The link expires in 15 minutes. Check your spam folder if you don't see it.
               </p>
               <button
                 onClick={() => { setStep(1); setEmail(''); setMessage({}); }}

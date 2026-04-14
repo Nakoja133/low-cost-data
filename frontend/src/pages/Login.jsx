@@ -18,7 +18,6 @@ const Login = () => {
     setError('');
     setHelpCenterEmail('');
     setLoading(true);
-    
     try {
       const result = await login(email, password);
       if (result.success) {
@@ -45,7 +44,6 @@ const Login = () => {
       position: 'relative',
       fontFamily: 'Inter, system-ui, sans-serif',
     }}>
-      
       {/* Background Decoration */}
       <div style={{
         position: 'fixed',
